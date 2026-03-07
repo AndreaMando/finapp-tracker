@@ -22,9 +22,10 @@ Database credentials (`DB_URL`, `DB_TOKEN`) are automatically provided by the sa
 ### Step 1: Install Dependencies
 
 ```bash
-bun add github:Kilo-Org/app-builder-db#main drizzle-orm && bun add -D drizzle-kit
+# use your preferred package manager; example with npm:
+npm install drizzle-orm sqlite3 drizzle-kit
+# or bun add drizzle-orm sqlite3 drizzle-kit
 ```
-
 ### Step 2: Create All Required Files
 
 ⚠️ **Important**: Create ALL files before running generate. Setup fails if any are missing.
@@ -47,21 +48,24 @@ export const users = sqliteTable("users", {
 #### `src/db/index.ts` - Database client
 
 ```typescript
-import { createDatabase } from "@kilocode/app-builder-db";
+// Example using Drizzle with better-sqlite3; adjust for your driver
+import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 
-export const db = createDatabase(schema);
+export const db = drizzle("db.sqlite", { schema });
 ```
-
 #### `src/db/migrate.ts` - Migration script
 
 ```typescript
-import { runMigrations } from "@kilocode/app-builder-db";
-import { db } from "./index";
+// This file can simply call the CLI or your chosen migration tool
+import { execSync } from "child_process";
 
-await runMigrations(db, {}, { migrationsFolder: "./src/db/migrations" });
+export function migrateDb() {
+  execSync("npm run db:migrate", { stdio: "inherit" });
+}
+
+// migrateDb(); // optionally execute on import
 ```
-
 #### `drizzle.config.ts` - Drizzle configuration (project root)
 
 ```typescript
@@ -99,10 +103,9 @@ bun db:generate
 bun typecheck && bun lint && git add -A && git commit -m "Add database support" && git push
 ```
 
-Migrations run automatically in the sandbox after push.
+Migrations can be executed with `npm run db:migrate` (or the equivalent for your package manager) whenever you need to apply schema changes.
 
-⚠️ **Never run `bun db:migrate` manually** - it won't work locally.
-
+⚠️ **Run migrations with the CLI** rather than invoking internal scripts directly.
 ## Usage Examples
 
 Database operations only work in Server Components and Server Actions.
@@ -128,15 +131,11 @@ await db.update(users).set({ name: "Jane" }).where(eq(users.id, 1));
 await db.delete(users).where(eq(users.id, 1));
 ```
 
-## Memory Bank Updates
+## Documentation Notes
 
-After implementing, update `.kilocode/rules/memory-bank/context.md`:
+Once the database integration is in place, update any project documentation to note:
 
-- Add database to "Recently Completed" section
-- Document the schema tables created
-- Note any API routes or server actions added
-
-Also update `.kilocode/rules/memory-bank/tech.md`:
-
-- Add Drizzle ORM to dependencies
-- Document database file structure
+- The tables defined in `src/db/schema.ts`
+- New API routes or server actions that use the database
+- Dependencies added (`drizzle-orm`, drivers, migration tools)
+- Location of database files and migration folder
