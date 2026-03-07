@@ -14,23 +14,36 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] ESLint configuration
 - [x] Memory bank documentation
 - [x] Recipe system for common features
+- [x] FinTrack personal finance app built on top of the template
 
 ## Current Structure
 
 | File/Directory | Purpose | Status |
 |----------------|---------|--------|
-| `src/app/page.tsx` | Home page | ✅ Ready |
-| `src/app/layout.tsx` | Root layout | ✅ Ready |
+| `src/app/page.tsx` | Dashboard with monthly summary, expense breakdown, goals overview | ✅ Ready |
+| `src/app/layout.tsx` | Root layout with sidebar navigation | ✅ Ready |
 | `src/app/globals.css` | Global styles | ✅ Ready |
+| `src/app/income/page.tsx` | Monthly income management (set/edit/delete per month) | ✅ Ready |
+| `src/app/recurring/page.tsx` | Recurring expenses (bills, subscriptions, insurance) with toggle | ✅ Ready |
+| `src/app/expenses/page.tsx` | One-time expenses per month, grouped by category | ✅ Ready |
+| `src/app/goals/page.tsx` | Savings goals with contributions, progress tracking, history | ✅ Ready |
+| `src/lib/store.ts` | localStorage data layer (income, recurring, one-time, goals, contributions) | ✅ Ready |
+| `src/components/layout/Sidebar.tsx` | Navigation sidebar | ✅ Ready |
+| `src/components/ui/Button.tsx` | Reusable button component | ✅ Ready |
+| `src/components/ui/Modal.tsx` | Reusable modal component | ✅ Ready |
 | `.kilocode/` | AI context & recipes | ✅ Ready |
 
 ## Current Focus
 
-The template is ready. Next steps depend on user requirements:
-
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
+FinTrack personal finance app is fully functional. Features implemented:
+- Monthly income tracking (per month, with notes)
+- Recurring expenses (bills, subscriptions, insurance) with enable/disable toggle
+- One-time expenses per month, categorized
+- Monthly dashboard with income vs expenses breakdown and savings calculation
+- Savings goals with target amount, deadline, color coding
+- Goal contributions (add money from monthly total to a goal)
+- Contribution history per goal with ability to remove contributions
+- All data persisted in browser localStorage (no backend needed)
 
 ## Quick Start Guide
 
