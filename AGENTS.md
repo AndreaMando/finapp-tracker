@@ -1,12 +1,12 @@
 ## Optional Feature Guides
 
-When users request features beyond the base template, check for available recipes in `.kilocode/recipes/`.
+When users request features beyond the base template, check for available recipes in `.project-recipes/recipes/`.
 
 ### Available Recipes
 
 | Recipe       | File                                | When to Use                                           |
 | ------------ | ----------------------------------- | ----------------------------------------------------- |
-| Add Database | `.kilocode/recipes/add-database.md` | When user needs data persistence (users, posts, etc.) |
+| Add Database | `.project-recipes/recipes/add-database.md` | When user needs data persistence (users, posts, etc.) |
 
 ### How to Use Recipes
 
@@ -18,5 +18,5 @@ When users request features beyond the base template, check for available recipe
 
 After completing the user's request, update the relevant memory bank files:
 
-- `.kilocode/rules/memory-bank/context.md` - Current state and recent changes
+- `.project-recipes/rules/memory-bank/context.md` - Current state and recent changes
 - Other memory bank files as needed when architecture, tech stack, or project goals change

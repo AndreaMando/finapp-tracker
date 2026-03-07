@@ -31,7 +31,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 | `src/components/layout/Sidebar.tsx` | Navigation sidebar | ✅ Ready |
 | `src/components/ui/Button.tsx` | Reusable button component | ✅ Ready |
 | `src/components/ui/Modal.tsx` | Reusable modal component | ✅ Ready |
-| `.kilocode/` | AI context & recipes | ✅ Ready |
+| `.project-recipes/` | AI context & recipes | ✅ Ready |
 
 ## Current Focus
 
@@ -68,7 +68,7 @@ export function Button({ children }: { children: React.ReactNode }) {
 
 ### To add a database:
 
-Follow `.kilocode/recipes/add-database.md`
+Follow `.project-recipes/recipes/add-database.md`
 
 ### To add API routes:
 
@@ -85,7 +85,7 @@ export async function GET() {
 
 | Recipe | File | Use Case |
 |--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
+| Add Database | `.project-recipes/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
 
 ## Pending Improvements
 
