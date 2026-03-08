@@ -10,7 +10,9 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
+// navItems labels will be translated inside the component
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/income", label: "Income", icon: TrendingUp },
@@ -21,18 +23,19 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <aside className="w-64 min-h-screen bg-gray-900 text-white flex flex-col">
       {/* Logo */}
       <div className="px-6 py-6 border-b border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-500 rounded-xl flex items-center justify-center">
+          <div className="w-9 h-9 bg-green-700 rounded-xl flex items-center justify-center">
             <Wallet size={20} />
           </div>
           <div>
             <p className="font-bold text-white text-base leading-tight">FinTrack</p>
-            <p className="text-gray-400 text-xs">Personal Finance</p>
+            <p className="text-gray-400 text-xs">{t("Personal Finance")}</p>
           </div>
         </div>
       </div>
@@ -47,12 +50,12 @@ export function Sidebar() {
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-green-800 text-white"
                   : "text-gray-400 hover:bg-gray-800 hover:text-white"
               }`}
             >
               <Icon size={18} />
-              {label}
+              {t(label)}
             </Link>
           );
         })}
@@ -60,7 +63,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-700">
-        <p className="text-gray-500 text-xs">Data stored locally in your browser</p>
+        <p className="text-gray-500 text-xs">{t("footerText")}</p>
       </div>
     </aside>
   );

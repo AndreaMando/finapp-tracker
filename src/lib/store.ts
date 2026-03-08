@@ -18,6 +18,7 @@ export interface RecurringExpense {
   amount: number;
   category: string;
   active: boolean;
+  startMonth: MonthKey; // month when expense begins (inclusive)
   createdAt: string;
 }
 
@@ -50,32 +51,11 @@ export interface GoalContribution {
   createdAt: string;
 }
 
-// ─── Storage Keys ─────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// network helpers
+// -----------------------------------------------------------------------------
 
-const KEYS = {
-  incomes: "fintrack_incomes",
-  recurringExpenses: "fintrack_recurring_expenses",
-  oneTimeExpenses: "fintrack_one_time_expenses",
-  savingsGoals: "fintrack_savings_goals",
-  goalContributions: "fintrack_goal_contributions",
-} as const;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function load<T>(key: string): T[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function save<T>(key: string, data: T[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(key, JSON.stringify(data));
-}
+const API_BASE = "/api";
 
 function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -86,31 +66,30 @@ export function currentMonthKey(): MonthKey {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export function formatMonthKey(key: MonthKey): string {
+export function formatMonthKey(key: MonthKey, locale: string = "en-US"): string {
   const [year, month] = key.split("-");
   const date = new Date(Number(year), Number(month) - 1, 1);
-  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  let formatted = date.toLocaleDateString(locale, { month: "long", year: "numeric" });
+  // Italian month names come back lowercase; capitalize the first letter to match UI style
+  if (locale.startsWith("it") && formatted.length > 0) {
+    formatted = formatted[0].toUpperCase() + formatted.slice(1);
+  }
+  return formatted;
 }
 
 // ─── Income ───────────────────────────────────────────────────────────────────
 
-export function getIncomes(): MonthlyIncome[] {
-  return load<MonthlyIncome>(KEYS.incomes);
+export async function getIncomes(): Promise<MonthlyIncome[]> {
+  const res = await fetch(`${API_BASE}/incomes`);
+  return res.json();
 }
 
-export function getIncomeForMonth(monthKey: MonthKey): MonthlyIncome | undefined {
-  return getIncomes().find((i) => i.monthKey === monthKey);
+export async function getIncomeForMonth(monthKey: MonthKey): Promise<MonthlyIncome | undefined> {
+  const incomes = await getIncomes();
+  return incomes.find((i) => i.monthKey === monthKey);
 }
 
-export function upsertIncome(monthKey: MonthKey, amount: number, note: string): MonthlyIncome {
-  const all = getIncomes();
-  const existing = all.find((i) => i.monthKey === monthKey);
-  if (existing) {
-    existing.amount = amount;
-    existing.note = note;
-    save(KEYS.incomes, all);
-    return existing;
-  }
+export async function upsertIncome(monthKey: MonthKey, amount: number, note: string): Promise<MonthlyIncome> {
   const entry: MonthlyIncome = {
     id: uid(),
     monthKey,
@@ -118,72 +97,91 @@ export function upsertIncome(monthKey: MonthKey, amount: number, note: string): 
     note,
     createdAt: new Date().toISOString(),
   };
-  save(KEYS.incomes, [...all, entry]);
-  return entry;
+  const res = await fetch(`${API_BASE}/incomes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  return res.json();
 }
 
-export function deleteIncome(id: string): void {
-  save(KEYS.incomes, getIncomes().filter((i) => i.id !== id));
+export async function deleteIncome(id: string): Promise<void> {
+  await fetch(`${API_BASE}/incomes/${id}`, { method: "DELETE" });
 }
 
 // ─── Recurring Expenses ───────────────────────────────────────────────────────
 
-export function getRecurringExpenses(): RecurringExpense[] {
-  return load<RecurringExpense>(KEYS.recurringExpenses);
+export async function getRecurringExpenses(): Promise<RecurringExpense[]> {
+  const res = await fetch(`${API_BASE}/recurring`);
+  const data: RecurringExpense[] = await res.json();
+  // the backend stores `active` as 0/1; convert to boolean for client
+  return data.map((e) => ({ ...e, active: !!e.active }));
 }
 
-export function addRecurringExpense(
+export async function addRecurringExpense(
   name: string,
   amount: number,
-  category: string
-): RecurringExpense {
+  category: string,
+  startMonth: MonthKey
+): Promise<RecurringExpense> {
   const entry: RecurringExpense = {
     id: uid(),
     name,
     amount,
     category,
     active: true,
+    startMonth,
     createdAt: new Date().toISOString(),
   };
-  save(KEYS.recurringExpenses, [...getRecurringExpenses(), entry]);
-  return entry;
+  const res = await fetch(`${API_BASE}/recurring`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  return res.json();
 }
 
-export function updateRecurringExpense(
+export async function updateRecurringExpense(
   id: string,
   updates: Partial<Omit<RecurringExpense, "id" | "createdAt">>
-): void {
-  const all = getRecurringExpenses().map((e) => (e.id === id ? { ...e, ...updates } : e));
-  save(KEYS.recurringExpenses, all);
+): Promise<void> {
+  await fetch(`${API_BASE}/recurring/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
 }
 
-export function deleteRecurringExpense(id: string): void {
-  save(KEYS.recurringExpenses, getRecurringExpenses().filter((e) => e.id !== id));
+export async function deleteRecurringExpense(id: string): Promise<void> {
+  await fetch(`${API_BASE}/recurring/${id}`, { method: "DELETE" });
 }
 
-export function getTotalRecurring(): number {
-  return getRecurringExpenses()
-    .filter((e) => e.active)
+export async function getTotalRecurring(monthKey: MonthKey = currentMonthKey()): Promise<number> {
+  const ex = await getRecurringExpenses();
+  return ex
+    .filter((e) => e.active && e.startMonth <= monthKey)
     .reduce((sum, e) => sum + e.amount, 0);
 }
 
 // ─── One-Time Expenses ────────────────────────────────────────────────────────
 
-export function getOneTimeExpenses(): OneTimeExpense[] {
-  return load<OneTimeExpense>(KEYS.oneTimeExpenses);
+export async function getOneTimeExpenses(): Promise<OneTimeExpense[]> {
+  const res = await fetch(`${API_BASE}/one-time`);
+  return res.json();
 }
 
-export function getOneTimeExpensesForMonth(monthKey: MonthKey): OneTimeExpense[] {
-  return getOneTimeExpenses().filter((e) => e.monthKey === monthKey);
+export async function getOneTimeExpensesForMonth(monthKey: MonthKey): Promise<OneTimeExpense[]> {
+  const all = await getOneTimeExpenses();
+  return all.filter((e) => e.monthKey === monthKey);
 }
 
-export function addOneTimeExpense(
+export async function addOneTimeExpense(
   monthKey: MonthKey,
   name: string,
   amount: number,
   category: string,
   date: string
-): OneTimeExpense {
+): Promise<OneTimeExpense> {
   const entry: OneTimeExpense = {
     id: uid(),
     monthKey,
@@ -193,19 +191,24 @@ export function addOneTimeExpense(
     date,
     createdAt: new Date().toISOString(),
   };
-  save(KEYS.oneTimeExpenses, [...getOneTimeExpenses(), entry]);
-  return entry;
+  const res = await fetch(`${API_BASE}/one-time`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  return res.json();
 }
 
-export function deleteOneTimeExpense(id: string): void {
-  save(KEYS.oneTimeExpenses, getOneTimeExpenses().filter((e) => e.id !== id));
+export async function deleteOneTimeExpense(id: string): Promise<void> {
+  await fetch(`${API_BASE}/one-time/${id}`, { method: "DELETE" });
 }
 
-export function getTotalOneTimeForMonth(monthKey: MonthKey): number {
-  return getOneTimeExpensesForMonth(monthKey).reduce((sum, e) => sum + e.amount, 0);
+export async function getTotalOneTimeForMonth(monthKey: MonthKey): Promise<number> {
+  const items = await getOneTimeExpensesForMonth(monthKey);
+  return items.reduce((sum, e) => sum + e.amount, 0);
 }
 
-// ─── Savings Goals ────────────────────────────────────────────────────────────
+// ─── Savings Goals & Contributions (network-backed) ───────────────────────────
 
 export const GOAL_COLORS = [
   "#6366f1",
@@ -218,16 +221,17 @@ export const GOAL_COLORS = [
   "#14b8a6",
 ];
 
-export function getSavingsGoals(): SavingsGoal[] {
-  return load<SavingsGoal>(KEYS.savingsGoals);
+export async function getSavingsGoals(): Promise<SavingsGoal[]> {
+  const res = await fetch(`${API_BASE}/goals`);
+  return res.json();
 }
 
-export function addSavingsGoal(
+export async function addSavingsGoal(
   name: string,
   targetAmount: number,
   deadline: string,
   color: string
-): SavingsGoal {
+): Promise<SavingsGoal> {
   const entry: SavingsGoal = {
     id: uid(),
     name,
@@ -237,43 +241,45 @@ export function addSavingsGoal(
     color,
     createdAt: new Date().toISOString(),
   };
-  save(KEYS.savingsGoals, [...getSavingsGoals(), entry]);
-  return entry;
+  const res = await fetch(`${API_BASE}/goals`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  return res.json();
 }
 
-export function updateSavingsGoal(
+export async function updateSavingsGoal(
   id: string,
   updates: Partial<Omit<SavingsGoal, "id" | "createdAt">>
-): void {
-  const all = getSavingsGoals().map((g) => (g.id === id ? { ...g, ...updates } : g));
-  save(KEYS.savingsGoals, all);
+): Promise<void> {
+  await fetch(`${API_BASE}/goals/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
 }
 
-export function deleteSavingsGoal(id: string): void {
-  save(KEYS.savingsGoals, getSavingsGoals().filter((g) => g.id !== id));
-  // Also remove contributions
-  save(
-    KEYS.goalContributions,
-    getGoalContributions().filter((c) => c.goalId !== id)
-  );
+export async function deleteSavingsGoal(id: string): Promise<void> {
+  await fetch(`${API_BASE}/goals/${id}`, { method: "DELETE" });
 }
 
-// ─── Goal Contributions ───────────────────────────────────────────────────────
-
-export function getGoalContributions(): GoalContribution[] {
-  return load<GoalContribution>(KEYS.goalContributions);
+export async function getGoalContributions(): Promise<GoalContribution[]> {
+  const res = await fetch(`${API_BASE}/contributions`);
+  return res.json();
 }
 
-export function getContributionsForGoal(goalId: string): GoalContribution[] {
-  return getGoalContributions().filter((c) => c.goalId === goalId);
+export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {
+  const all = await getGoalContributions();
+  return all.filter((c) => c.goalId === goalId);
 }
 
-export function addGoalContribution(
+export async function addGoalContribution(
   goalId: string,
   monthKey: MonthKey,
   amount: number,
   note: string
-): GoalContribution {
+): Promise<GoalContribution> {
   const entry: GoalContribution = {
     id: uid(),
     goalId,
@@ -282,29 +288,16 @@ export function addGoalContribution(
     note,
     createdAt: new Date().toISOString(),
   };
-  save(KEYS.goalContributions, [...getGoalContributions(), entry]);
-  // Update goal's currentAmount
-  const goals = getSavingsGoals();
-  const goal = goals.find((g) => g.id === goalId);
-  if (goal) {
-    goal.currentAmount = Math.min(goal.currentAmount + amount, goal.targetAmount);
-    save(KEYS.savingsGoals, goals);
-  }
-  return entry;
+  const res = await fetch(`${API_BASE}/contributions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  return res.json();
 }
 
-export function deleteGoalContribution(id: string): void {
-  const contribution = getGoalContributions().find((c) => c.id === id);
-  if (contribution) {
-    // Subtract from goal
-    const goals = getSavingsGoals();
-    const goal = goals.find((g) => g.id === contribution.goalId);
-    if (goal) {
-      goal.currentAmount = Math.max(0, goal.currentAmount - contribution.amount);
-      save(KEYS.savingsGoals, goals);
-    }
-  }
-  save(KEYS.goalContributions, getGoalContributions().filter((c) => c.id !== id));
+export async function deleteGoalContribution(id: string): Promise<void> {
+  await fetch(`${API_BASE}/contributions/${id}`, { method: "DELETE" });
 }
 
 // ─── Monthly Summary ──────────────────────────────────────────────────────────
@@ -319,14 +312,16 @@ export interface MonthlySummary {
   savings: number;
 }
 
-export function getMonthlySummary(monthKey: MonthKey): MonthlySummary {
-  const income = getIncomeForMonth(monthKey)?.amount ?? 0;
-  const recurringExpenses = getTotalRecurring();
-  const oneTimeExpenses = getTotalOneTimeForMonth(monthKey);
-  const goalContributions = getGoalContributions()
+export async function getMonthlySummary(monthKey: MonthKey): Promise<MonthlySummary> {
+  const income = (await getIncomeForMonth(monthKey))?.amount ?? 0;
+  const recurringExpenses = await getTotalRecurring();
+  const oneTimeExpenses = await getTotalOneTimeForMonth(monthKey);
+  const goalContributions = (await getGoalContributions())
     .filter((c) => c.monthKey === monthKey)
     .reduce((sum, c) => sum + c.amount, 0);
-  const totalExpenses = recurringExpenses + oneTimeExpenses + goalContributions;
+  // do not include goal contributions in the "total expenses" figure
+  const totalExpenses = recurringExpenses + oneTimeExpenses;
+  // savings are calculated against actual spending, not contributions
   const savings = income - totalExpenses;
   return {
     monthKey,

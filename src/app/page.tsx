@@ -19,6 +19,7 @@ import {
   type MonthlySummary,
   type SavingsGoal,
 } from "@/lib/store";
+import { useTranslation } from "@/lib/i18n";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -60,6 +61,7 @@ function StatCard({ label, value, icon, color, sub }: StatCardProps) {
 }
 
 function GoalCard({ goal }: { goal: SavingsGoal }) {
+  const { t } = useTranslation();
   const pct = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
   const remaining = goal.targetAmount - goal.currentAmount;
   const deadline = new Date(goal.deadline);
@@ -74,7 +76,7 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
           <span className="font-semibold text-gray-800 text-sm">{goal.name}</span>
         </div>
         <span className="text-xs text-gray-400">
-          {daysLeft > 0 ? `${daysLeft}d left` : "Overdue"}
+          {daysLeft > 0 ? `${daysLeft}${t("d left")}` : t("Overdue")}
         </span>
       </div>
       <div className="w-full bg-gray-100 rounded-full h-2 mb-3">
@@ -84,8 +86,8 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
         />
       </div>
       <div className="flex justify-between text-xs text-gray-500">
-        <span>{formatCurrency(goal.currentAmount)} saved</span>
-        <span>{formatCurrency(remaining)} to go</span>
+        <span>{formatCurrency(goal.currentAmount)} {t("saved")}</span>
+        <span>{formatCurrency(remaining)} {t("to go")}</span>
       </div>
       <p className="text-right text-xs font-semibold mt-1" style={{ color: goal.color }}>
         {pct.toFixed(0)}%
@@ -95,17 +97,20 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
 }
 
 export default function DashboardPage() {
+  const { t, lang, setLang } = useTranslation();
+  const locale = lang === "it" ? "it-IT" : "en-US";
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
 
   useEffect(() => {
-    const summary = getMonthlySummary(monthKey);
-    const goals = getSavingsGoals();
-    Promise.resolve().then(() => {
-      setSummary(summary);
-      setGoals(goals);
-    });
+    async function load() {
+      const s = await getMonthlySummary(monthKey);
+      const g = await getSavingsGoals();
+      setSummary(s);
+      setGoals(g);
+    }
+    load();
   }, [monthKey]);
 
   if (!summary) return null;
@@ -118,8 +123,19 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Your monthly financial overview</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("Dashboard")}</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{t("Your monthly financial overview")}</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <label className="text-sm text-gray-600">{t("Language")}:</label>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as "en" | "it")}
+            className="border border-gray-200 rounded-xl px-2 py-1 text-sm"
+          >
+            <option value="en">English</option>
+            <option value="it">Italiano</option>
+          </select>
         </div>
         {/* Month Selector */}
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
@@ -130,7 +146,7 @@ export default function DashboardPage() {
             <ChevronLeft size={16} />
           </button>
           <span className="text-sm font-semibold text-gray-700 min-w-[130px] text-center">
-            {formatMonthKey(monthKey)}
+            {formatMonthKey(monthKey, locale)}
           </span>
           <button
             onClick={() => setMonthKey(addMonths(monthKey, 1))}
@@ -144,30 +160,30 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          label="Income"
+          label={t("Income")}
           value={formatCurrency(summary.income)}
           icon={<TrendingUp size={20} className="text-emerald-600" />}
           color="text-emerald-600"
         />
         <StatCard
-          label="Total Expenses"
+          label={t("Total Expenses")}
           value={formatCurrency(summary.totalExpenses)}
           icon={<TrendingDown size={20} className="text-red-500" />}
           color="text-red-500"
-          sub={`Recurring: ${formatCurrency(summary.recurringExpenses)}`}
+          sub={`${t("Recurring")} : ${formatCurrency(summary.recurringExpenses)}`}
         />
         <StatCard
-          label="Goal Contributions"
+          label={t("Goal Contributions")}
           value={formatCurrency(summary.goalContributions)}
           icon={<Target size={20} className="text-indigo-600" />}
           color="text-indigo-600"
         />
         <StatCard
-          label="Net Savings"
+          label={t("Net Savings")}
           value={formatCurrency(summary.savings)}
           icon={<PiggyBank size={20} className={savingsColor} />}
           color={savingsColor}
-          sub={summary.savings >= 0 ? "Great job! 🎉" : "Over budget"}
+          sub={summary.savings >= 0 ? t("Great job! 🎉") : t("Over budget")}
         />
       </div>
 
@@ -175,34 +191,34 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Expense Breakdown */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-semibold text-gray-800 mb-4">Expense Breakdown</h2>
+          <h2 className="font-semibold text-gray-800 mb-4">{t("Expense Breakdown")}</h2>
           {summary.income === 0 && summary.totalExpenses === 0 ? (
             <p className="text-gray-400 text-sm text-center py-6">
-              No data for this month yet.{" "}
+              {t("No data for this month yet.")}{" "}
               <Link href="/income" className="text-indigo-500 hover:underline">
-                Add income
+                {t("Add income")}
               </Link>
             </p>
           ) : (
             <div className="space-y-3">
               {[
                 {
-                  label: "Recurring Expenses",
+                  label: t("Recurring Expenses"),
                   amount: summary.recurringExpenses,
                   color: "bg-orange-400",
                 },
                 {
-                  label: "One-time Expenses",
+                  label: t("One-time Expenses"),
                   amount: summary.oneTimeExpenses,
                   color: "bg-red-400",
                 },
                 {
-                  label: "Goal Contributions",
+                  label: t("Goal Contributions"),
                   amount: summary.goalContributions,
-                  color: "bg-indigo-400",
+                  color: "bg-green-400",
                 },
                 {
-                  label: "Savings",
+                  label: t("Savings"),
                   amount: Math.max(0, summary.savings),
                   color: "bg-emerald-400",
                 },
@@ -235,13 +251,13 @@ export default function DashboardPage() {
 
         {/* Quick Links */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-semibold text-gray-800 mb-4">Quick Actions</h2>
+          <h2 className="font-semibold text-gray-800 mb-4">{t("Quick Actions")}</h2>
           <div className="space-y-2">
             {[
-              { href: "/income", label: "Set income for this month", desc: "Record your earnings" },
-              { href: "/recurring", label: "Manage recurring expenses", desc: "Bills, subscriptions, insurance" },
-              { href: "/expenses", label: "Add an expense", desc: "Dinners, shopping, etc." },
-              { href: "/goals", label: "Contribute to a goal", desc: "Track your savings targets" },
+              { href: "/income", label: t("Set income for this month"), desc: t("Record your earnings") },
+              { href: "/recurring", label: t("Manage recurring expenses"), desc: t("Bills, subscriptions, insurance") },
+              { href: "/expenses", label: t("Add an expense"), desc: t("Dinners, shopping, etc.") },
+              { href: "/goals", label: t("Contribute to a goal"), desc: t("Track your savings targets") },
             ].map(({ href, label, desc }) => (
               <Link
                 key={href}
@@ -266,12 +282,12 @@ export default function DashboardPage() {
       {goals.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-800">Savings Goals</h2>
+            <h2 className="font-semibold text-gray-800">{t("Savings Goals")}</h2>
             <Link
               href="/goals"
               className="text-sm text-indigo-500 hover:text-indigo-700 flex items-center gap-1"
             >
-              View all <ArrowRight size={14} />
+              {t("View all")} <ArrowRight size={14} />
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -6,11 +6,11 @@ import {
   currentMonthKey,
   formatMonthKey,
   getIncomes,
-  getIncomeForMonth,
   upsertIncome,
   deleteIncome,
   type MonthlyIncome,
 } from "@/lib/store";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 
@@ -36,18 +36,20 @@ interface IncomeFormProps {
 }
 
 function IncomeForm({ monthKey, existing, onSave, onClose }: IncomeFormProps) {
+  const { t, lang } = useTranslation();
+  const locale = lang === "it" ? "it-IT" : "en-US";
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
   const [note, setNote] = useState(existing?.note ?? "");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = parseFloat(amount);
     if (isNaN(parsed) || parsed <= 0) {
-      setError("Please enter a valid amount greater than 0.");
+      setError(t("Please enter a valid amount greater than 0."));
       return;
     }
-    upsertIncome(monthKey, parsed, note);
+    await upsertIncome(monthKey, parsed, note);
     onSave();
     onClose();
   }
@@ -56,15 +58,15 @@ function IncomeForm({ monthKey, existing, onSave, onClose }: IncomeFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Month
+          {t("Month")}
         </label>
         <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-          {formatMonthKey(monthKey)}
+          {formatMonthKey(monthKey, locale)}
         </p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Amount (€) <span className="text-red-500">*</span>
+          {t("Amount")} (€) <span className="text-red-500">*</span>
         </label>
         <input
           type="number"
@@ -72,7 +74,7 @@ function IncomeForm({ monthKey, existing, onSave, onClose }: IncomeFormProps) {
           min="0"
           value={amount}
           onChange={(e) => { setAmount(e.target.value); setError(""); }}
-          placeholder="e.g. 2500.00"
+          placeholder={t("e.g. 2500.00")}
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           autoFocus
         />
@@ -80,22 +82,22 @@ function IncomeForm({ monthKey, existing, onSave, onClose }: IncomeFormProps) {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Note (optional)
+          {t("Note (optional)")}
         </label>
         <input
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="e.g. Salary + bonus"
+          placeholder={t("e.g. Salary + bonus")}
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
         />
       </div>
       <div className="flex gap-2 pt-2">
         <Button type="submit" className="flex-1">
-          {existing ? "Update Income" : "Save Income"}
+          {existing ? t("Update Income") : t("Save Income")}
         </Button>
         <Button type="button" variant="secondary" onClick={onClose}>
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
     </form>
@@ -103,21 +105,26 @@ function IncomeForm({ monthKey, existing, onSave, onClose }: IncomeFormProps) {
 }
 
 export default function IncomePage() {
+  const { t, lang } = useTranslation();
+  const locale = lang === "it" ? "it-IT" : "en-US";
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [allIncomes, setAllIncomes] = useState<MonthlyIncome[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    const data = getIncomes().sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-    Promise.resolve().then(() => setAllIncomes(data));
+    async function load() {
+      const data = (await getIncomes()).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+      setAllIncomes(data);
+    }
+    load();
   }, [refresh]);
 
-  const currentIncome = getIncomeForMonth(monthKey);
+  const currentIncome = allIncomes.find((i) => i.monthKey === monthKey);
 
-  function handleDelete(id: string) {
-    if (confirm("Delete this income entry?")) {
-      deleteIncome(id);
+  async function handleDelete(id: string) {
+    if (confirm(t("Delete this income entry?"))) {
+      await deleteIncome(id);
       setRefresh((r) => r + 1);
     }
   }
@@ -127,12 +134,12 @@ export default function IncomePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Income</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Record your monthly earnings</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("Income")}</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{t("Record your monthly earnings")}</p>
         </div>
         <Button onClick={() => setShowModal(true)}>
           <Plus size={16} />
-          Set Income
+          {t("Set Income")}
         </Button>
       </div>
 
@@ -145,7 +152,7 @@ export default function IncomePage() {
           <ChevronLeft size={16} />
         </button>
         <span className="text-sm font-semibold text-gray-700 min-w-[130px] text-center">
-          {formatMonthKey(monthKey)}
+          {formatMonthKey(monthKey, locale)}
         </span>
         <button
           onClick={() => setMonthKey(addMonths(monthKey, 1))}
@@ -162,8 +169,8 @@ export default function IncomePage() {
             <TrendingUp size={20} className="text-emerald-600" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Income for</p>
-            <p className="font-semibold text-gray-800">{formatMonthKey(monthKey)}</p>
+            <p className="text-sm text-gray-500">{t("Income for")}</p>
+            <p className="font-semibold text-gray-800">{formatMonthKey(monthKey, locale)}</p>
           </div>
         </div>
         {currentIncome ? (
@@ -181,7 +188,7 @@ export default function IncomePage() {
                 onClick={() => setShowModal(true)}
               >
                 <Pencil size={14} />
-                Edit
+                {t("Edit")}
               </Button>
               <Button
                 variant="danger"
@@ -189,25 +196,25 @@ export default function IncomePage() {
                 onClick={() => handleDelete(currentIncome.id)}
               >
                 <Trash2 size={14} />
-                Delete
+                {t("Delete")}
               </Button>
             </div>
           </div>
         ) : (
           <div className="mt-4">
-            <p className="text-gray-400 text-sm">No income recorded for this month.</p>
+            <p className="text-gray-400 text-sm">{t("No income recorded for this month.")}</p>
             <Button className="mt-3" size="sm" onClick={() => setShowModal(true)}>
               <Plus size={14} />
-              Add Income
+              {t("Add Income")}
             </Button>
           </div>
         )}
       </div>
 
       {/* History */}
-      <h2 className="font-semibold text-gray-800 mb-3">Income History</h2>
+      <h2 className="font-semibold text-gray-800 mb-3">{t("Income History")}</h2>
       {allIncomes.length === 0 ? (
-        <p className="text-gray-400 text-sm">No income entries yet.</p>
+        <p className="text-gray-400 text-sm">{t("No income entries yet.")}</p>
       ) : (
         <div className="space-y-2">
           {allIncomes.map((income) => (
@@ -216,7 +223,7 @@ export default function IncomePage() {
               className="bg-white rounded-xl px-5 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between"
             >
               <div>
-                <p className="font-medium text-gray-800">{formatMonthKey(income.monthKey)}</p>
+                <p className="font-medium text-gray-800">{formatMonthKey(income.monthKey, locale)}</p>
                 {income.note && (
                   <p className="text-xs text-gray-400 mt-0.5">{income.note}</p>
                 )}
@@ -240,7 +247,7 @@ export default function IncomePage() {
       {/* Modal */}
       {showModal && (
         <Modal
-          title={currentIncome ? "Edit Income" : "Set Income"}
+          title={currentIncome ? t("Edit Income") : t("Set Income")}
           onClose={() => setShowModal(false)}
         >
           <IncomeForm
