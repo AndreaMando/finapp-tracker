@@ -12,6 +12,7 @@ import {
   addGoalContribution,
   deleteGoalContribution,
   GOAL_COLORS,
+  formatDate,
   type SavingsGoal,
   type GoalContribution,
 } from "@/lib/store";
@@ -42,6 +43,7 @@ function NewGoalForm({ onSave, onClose }: NewGoalFormProps) {
   const [deadline, setDeadline] = useState("");
   const [color, setColor] = useState(GOAL_COLORS[0]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const now = new Date();
 
   function validate() {
     const e: Record<string, string> = {};
@@ -97,12 +99,17 @@ function NewGoalForm({ onSave, onClose }: NewGoalFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t("Deadline")} <span className="text-red-500">*</span>
           </label>
-          <input
-            type="date"
-            value={deadline}
-            onChange={(e) => { setDeadline(e.target.value); setErrors((p) => ({ ...p, deadline: "" })); }}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={deadline}
+              onChange={(e) => { setDeadline(e.target.value); setErrors((p) => ({ ...p, deadline: "" })); }}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer"
+            />
+            <span className="block w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm pointer-events-none capitalize">
+              {deadline ? formatDate(deadline, locale) : "\u00A0"}
+            </span>
+          </div>
           {errors.deadline && <p className="text-red-500 text-xs mt-1">{errors.deadline}</p>}
         </div>
       </div>

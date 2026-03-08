@@ -41,8 +41,9 @@ interface ExpenseFormProps {
 }
 
 function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const todayKey = currentMonthKey();
+  const locale = lang === "it" ? "it-IT" : "en-US";
   const [name, setName] = useState(existing?.name ?? "");
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
   const [category, setCategory] = useState(existing?.category ?? CATEGORIES[0]);
@@ -122,12 +123,17 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {t("Start Month")} <span className="text-red-500">*</span>
         </label>
-        <input
-          type="month"
-          value={startMonth}
-          onChange={(e) => { setStartMonth(e.target.value); setErrors((prev) => ({ ...prev, startMonth: "" })); }}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        />
+        <div className="relative">
+          <input
+            type="month"
+            value={startMonth}
+            onChange={(e) => { setStartMonth(e.target.value); setErrors((prev) => ({ ...prev, startMonth: "" })); }}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer"
+          />
+          <span className="block w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm pointer-events-none capitalize">
+            {startMonth ? formatMonthKey(startMonth, locale) : "\u00A0"}
+          </span>
+        </div>
         {errors.startMonth && <p className="text-red-500 text-xs mt-1">{errors.startMonth}</p>}
       </div>
       <div className="flex gap-2 pt-2">

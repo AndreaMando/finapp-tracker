@@ -77,6 +77,16 @@ export function formatMonthKey(key: MonthKey, locale: string = "en-US"): string 
   return formatted;
 }
 
+// format a full ISO date string (e.g. for one-time expenses or deadlines)
+export function formatDate(iso: string, locale: string = "en-US"): string {
+  const d = new Date(iso);
+  let formatted = d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  if (locale.startsWith("it") && formatted.length > 0) {
+    formatted = formatted[0].toUpperCase() + formatted.slice(1);
+  }
+  return formatted;
+}
+
 // ─── Income ───────────────────────────────────────────────────────────────────
 
 export async function getIncomes(): Promise<MonthlyIncome[]> {

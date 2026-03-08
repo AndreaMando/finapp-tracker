@@ -19,7 +19,10 @@ export default function RootLayout({
         <I18nProvider>
           <div className="flex min-h-screen">
             <Sidebar />
-            <main className="flex-1 overflow-auto">{children}</main>
+            {/* make the scrollable area contain its overscroll behaviour so
+                mobile browsers (especially iPad Safari) don’t allow you to ‘pull’
+                past the end of the content and see whitespace */}
+            <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
           </div>
         </I18nProvider>
       </body>

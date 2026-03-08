@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, ShoppingBag, ChevronLeft, ChevronRight } from "lu
 import {
   currentMonthKey,
   formatMonthKey,
+  formatDate,
   getOneTimeExpensesForMonth,
   addOneTimeExpense,
   deleteOneTimeExpense,
@@ -60,7 +61,8 @@ interface ExpenseFormProps {
 }
 
 function ExpenseForm({ monthKey, onSave, onClose }: ExpenseFormProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const locale = lang === "it" ? "it-IT" : "en-US";
   const today = new Date().toISOString().split("T")[0];
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -121,12 +123,17 @@ function ExpenseForm({ monthKey, onSave, onClose }: ExpenseFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t("Date")} <span className="text-red-500">*</span>
           </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: "" })); }}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: "" })); }}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer"
+            />
+            <span className="block w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm pointer-events-none capitalize">
+              {date ? formatDate(date, locale) : "\u00A0"}
+            </span>
+          </div>
           {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
         </div>
       </div>
@@ -268,11 +275,7 @@ export default function ExpensesPage() {
                       <div>
                         <p className="font-medium text-gray-800">{expense.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {new Date(expense.date).toLocaleDateString(locale, {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
+                          {formatDate(expense.date, locale)}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
