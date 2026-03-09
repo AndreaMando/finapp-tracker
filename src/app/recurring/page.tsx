@@ -124,15 +124,26 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
           {t("Start Month")} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
+          {/* visible native control on larger screens */}
           <input
             type="month"
             value={startMonth}
             onChange={(e) => { setStartMonth(e.target.value); setErrors((prev) => ({ ...prev, startMonth: "" })); }}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block"
           />
-          <span className="block w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm pointer-events-none capitalize">
-            {startMonth ? formatMonthKey(startMonth, locale) : "\u00A0"}
-          </span>
+
+          {/* overlay trick for small devices */}
+          <label className="relative block sm:hidden">
+            <input
+              type="month"
+              value={startMonth}
+              onChange={(e) => { setStartMonth(e.target.value); setErrors((prev) => ({ ...prev, startMonth: "" })); }}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer z-10"
+            />
+            <span className="absolute inset-0 flex items-center px-3 py-2.5 text-sm border border-gray-200 rounded-xl pointer-events-none capitalize z-0">
+              {startMonth ? formatMonthKey(startMonth, locale) : "\u00A0"}
+            </span>
+          </label>
         </div>
         {errors.startMonth && <p className="text-red-500 text-xs mt-1">{errors.startMonth}</p>}
       </div>

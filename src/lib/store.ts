@@ -209,6 +209,17 @@ export async function addOneTimeExpense(
   return res.json();
 }
 
+export async function updateOneTimeExpense(
+  id: string,
+  updates: Partial<Omit<OneTimeExpense, "id" | "createdAt">>
+): Promise<void> {
+  await fetch(`${API_BASE}/one-time/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+}
+
 export async function deleteOneTimeExpense(id: string): Promise<void> {
   await fetch(`${API_BASE}/one-time/${id}`, { method: "DELETE" });
 }
@@ -282,6 +293,12 @@ export async function getGoalContributions(): Promise<GoalContribution[]> {
 export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {
   const all = await getGoalContributions();
   return all.filter((c) => c.goalId === goalId);
+}
+
+//Needs to be integrated with the monthly summary to show contributions for the current month, not just total contributions for the goal
+export async function getContributionsForMonth(monthKey: MonthKey): Promise<GoalContribution[]> {
+  const all = await getGoalContributions();
+  return all.filter((c) => c.monthKey === monthKey);
 }
 
 export async function addGoalContribution(

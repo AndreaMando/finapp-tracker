@@ -36,6 +36,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "Contribute to a goal": "Contribuisci a un obiettivo",
     "Track your savings targets": "Monitora i tuoi obiettivi di risparmio",
     "View all": "Vedi tutti",
+    "This Month": "Questo Mese",
 
     // buttons/general
     "Add Expense": "Aggiungi Spesa",
@@ -73,6 +74,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "e.g. Salary + bonus": "es. Stipendio + bonus",
     "e.g. Monthly savings transfer": "es. Trasferimento risparmio mensile",
     "e.g. 12.99": "es. 12.99",
+    "Edit Expense": "Modifica Spesa",
 
     // language selector
     "Language": "Lingua",

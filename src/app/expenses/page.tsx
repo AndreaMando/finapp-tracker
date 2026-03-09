@@ -10,6 +10,7 @@ import {
   addOneTimeExpense,
   deleteOneTimeExpense,
   getTotalOneTimeForMonth,
+  updateOneTimeExpense,
   type OneTimeExpense,
 } from "@/lib/store";
 import { Button } from "@/components/ui/Button";
@@ -55,19 +56,20 @@ function addMonths(key: string, delta: number): string {
 }
 
 interface ExpenseFormProps {
-  monthKey: string;
+  existing?: OneTimeExpense;
   onSave: () => void;
   onClose: () => void;
 }
 
-function ExpenseForm({ monthKey, onSave, onClose }: ExpenseFormProps) {
+function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
   const { t, lang } = useTranslation();
   const locale = lang === "it" ? "it-IT" : "en-US";
   const today = new Date().toISOString().split("T")[0];
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [date, setDate] = useState(today);
+  const monthKey = currentMonthKey();
+  const [name, setName] = useState(existing?.name ?? "");
+  const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
+  const [category, setCategory] = useState(existing?.category ?? CATEGORIES[0]);
+  const [date, setDate] = useState(existing?.date ?? today);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function validate() {
@@ -83,7 +85,17 @@ function ExpenseForm({ monthKey, onSave, onClose }: ExpenseFormProps) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    await addOneTimeExpense(monthKey, name.trim(), parseFloat(amount), category, date);
+    if (existing) {
+      await updateOneTimeExpense(existing.id, {
+        monthKey: monthKey,
+        name: name.trim(), 
+        amount: parseFloat(amount), 
+        category, 
+        date 
+      });
+    } else {
+      await addOneTimeExpense(monthKey, name.trim(), parseFloat(amount), category, date);
+    }
     onSave();
     onClose();
   }
@@ -128,11 +140,19 @@ function ExpenseForm({ monthKey, onSave, onClose }: ExpenseFormProps) {
               type="date"
               value={date}
               onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: "" })); }}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block"
             />
-            <span className="block w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm pointer-events-none capitalize">
-              {date ? formatDate(date, locale) : "\u00A0"}
-            </span>
+            <label className="relative block sm:hidden">
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: "" })); }}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer z-10"
+              />
+              <span className="absolute inset-0 flex items-center px-3 py-2.5 text-sm border border-gray-200 rounded-xl pointer-events-none capitalize z-0">
+                {date ? formatDate(date, locale) : "\u00A0"}
+              </span>
+            </label>
           </div>
           {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
         </div>
@@ -150,7 +170,7 @@ function ExpenseForm({ monthKey, onSave, onClose }: ExpenseFormProps) {
         </select>
       </div>
       <div className="flex gap-2 pt-2">
-        <Button type="submit" className="flex-1">{t("Add Expense")}</Button>
+        <Button type="submit" className="flex-1">{existing ? t("Update") : t("Add Expense")}</Button>
         <Button type="button" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
       </div>
     </form>
@@ -171,6 +191,7 @@ export default function ExpensesPage() {
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [expenses, setExpenses] = useState<OneTimeExpense[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<OneTimeExpense | undefined>();
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
@@ -189,6 +210,16 @@ export default function ExpensesPage() {
     }
   }
 
+  function openEdit(expense: OneTimeExpense) {
+    setEditing(expense);
+    setShowModal(true);
+  }
+
+  function closeModal() {
+    setShowModal(false);
+    setEditing(undefined);
+  }
+
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   const grouped = groupByCategory(expenses);
 
@@ -200,7 +231,7 @@ export default function ExpensesPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("Expenses")}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{t("One-time and variable spending")}</p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
+        <Button onClick={() => { setEditing(undefined); setShowModal(true); }}>
           <Plus size={16} />
           {t("Add Expense")}
         </Button>
@@ -282,12 +313,26 @@ export default function ExpensesPage() {
                         <span className="font-semibold text-gray-800">
                           {formatCurrency(expense.amount)}
                         </span>
-                        <button
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => openEdit(expense)}
+                            className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(expense.id)}
+                            className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        {/*<button
                           onClick={() => handleDelete(expense.id)}
                           className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                         <Trash2 size={14} />
-                        </button>
+                        </button>*/}
                       </div>
                     </div>
                   ))}
@@ -300,9 +345,11 @@ export default function ExpensesPage() {
 
       {/* Modal */}
       {showModal && (
-        <Modal title={t("Add Expense")} onClose={() => setShowModal(false)}>
+        <Modal title={editing ? t("Edit Expense") : t("Add Expense")}
+          onClose={closeModal}
+        >
           <ExpenseForm
-            monthKey={monthKey}
+            existing={editing}
             onSave={() => setRefresh((r) => r + 1)}
             onClose={() => setShowModal(false)}
           />

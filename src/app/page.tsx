@@ -16,6 +16,7 @@ import {
   formatMonthKey,
   getMonthlySummary,
   getSavingsGoals,
+  getContributionsForMonth,
   type MonthlySummary,
   type SavingsGoal,
 } from "@/lib/store";
@@ -102,6 +103,7 @@ export default function DashboardPage() {
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
+  //const [monthlyGoalContributions] = useState(getContributionsForMonth(monthKey));
 
   useEffect(() => {
     async function load() {
@@ -177,6 +179,7 @@ export default function DashboardPage() {
           value={formatCurrency(summary.goalContributions)}
           icon={<Target size={20} className="text-indigo-600" />}
           color="text-indigo-600"
+          //sub={`${t("This Month")} : ${formatCurrency(monthlyGoalContributions.)}`}
         />
         <StatCard
           label={t("Net Savings")}
