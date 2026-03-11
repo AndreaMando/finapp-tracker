@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+toDoList.json
 
 # next.js
 /.next/
