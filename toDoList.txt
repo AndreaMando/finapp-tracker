@@ -1,0 +1,2 @@
+(expense/recurring/goals) page.tsx: formattare correttamente il label di inserimento data in quanto su iPad vengono mostrate più larghe e più alte rispetto agli altri label e rispetto alla visualizzazione pc
+

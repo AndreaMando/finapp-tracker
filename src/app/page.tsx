@@ -16,7 +16,6 @@ import {
   formatMonthKey,
   getMonthlySummary,
   getSavingsGoals,
-  getContributionsForMonth,
   type MonthlySummary,
   type SavingsGoal,
 } from "@/lib/store";
@@ -103,7 +102,6 @@ export default function DashboardPage() {
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
-  //const [monthlyGoalContributions] = useState(getContributionsForMonth(monthKey));
 
   useEffect(() => {
     async function load() {
@@ -133,7 +131,7 @@ export default function DashboardPage() {
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value as "en" | "it")}
-            className="border border-gray-200 rounded-xl px-2 py-1 text-sm"
+            className="border border-gray-200 rounded-xl px-2 py-1 text-sm cursor-pointer"
           >
             <option value="en">English</option>
             <option value="it">Italiano</option>
@@ -143,7 +141,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
           <button
             onClick={() => setMonthKey(addMonths(monthKey, -1))}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+            className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 cursor-pointer"
           >
             <ChevronLeft size={16} />
           </button>
@@ -152,7 +150,7 @@ export default function DashboardPage() {
           </span>
           <button
             onClick={() => setMonthKey(addMonths(monthKey, 1))}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+            className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 cursor-pointer"
           >
             <ChevronRight size={16} />
           </button>
@@ -179,14 +177,12 @@ export default function DashboardPage() {
           value={formatCurrency(summary.goalContributions)}
           icon={<Target size={20} className="text-indigo-600" />}
           color="text-indigo-600"
-          //sub={`${t("This Month")} : ${formatCurrency(monthlyGoalContributions.)}`}
         />
         <StatCard
           label={t("Net Savings")}
           value={formatCurrency(summary.savings)}
           icon={<PiggyBank size={20} className={savingsColor} />}
           color={savingsColor}
-          sub={summary.savings >= 0 ? t("Great job! 🎉") : t("Over budget")}
         />
       </div>
 

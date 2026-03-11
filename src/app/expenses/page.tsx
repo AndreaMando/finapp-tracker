@@ -9,7 +9,6 @@ import {
   getOneTimeExpensesForMonth,
   addOneTimeExpense,
   deleteOneTimeExpense,
-  getTotalOneTimeForMonth,
   updateOneTimeExpense,
   type OneTimeExpense,
 } from "@/lib/store";
@@ -38,7 +37,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Personal Care": "bg-teal-100 text-teal-700",
   Gifts: "bg-red-100 text-red-700",
   Home: "bg-yellow-100 text-yellow-700",
-  Other: "bg-gray-100 text-gray-600",
+  Other: "bg-gray-200 text-gray-600",
 };
 
 function formatCurrency(amount: number): string {
@@ -140,7 +139,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
               type="date"
               value={date}
               onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: "" })); }}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block cursor-pointer"
             />
             <label className="relative block sm:hidden">
               <input
@@ -162,7 +161,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white cursor-pointer"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{t(c)}</option>
@@ -170,8 +169,8 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
         </select>
       </div>
       <div className="flex gap-2 pt-2">
-        <Button type="submit" className="flex-1">{existing ? t("Update") : t("Add Expense")}</Button>
-        <Button type="button" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
+        <Button type="submit" className="flex-1  cursor-pointer">{existing ? t("Update") : t("Add Expense")}</Button>
+        <Button type="button" className=" cursor-pointer" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
       </div>
     </form>
   );
@@ -185,6 +184,14 @@ function groupByCategory(expenses: OneTimeExpense[]): Record<string, OneTimeExpe
   }, {});
 }
 
+function groupByDate(expenses: OneTimeExpense[]): Record<string, OneTimeExpense[]> {
+  return expenses.reduce<Record<string, OneTimeExpense[]>>((acc, e) => {
+    if (!acc[e.date]) acc[e.date] = [];
+    acc[e.date].push(e);
+    return acc;
+  }, {});
+}
+
 export default function ExpensesPage() {
   const { t, lang } = useTranslation();
   const locale = lang === "it" ? "it-IT" : "en-US";
@@ -193,6 +200,7 @@ export default function ExpensesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<OneTimeExpense | undefined>();
   const [refresh, setRefresh] = useState(0);
+  const [viewMode, setViewMode] = useState<"category" | "date">("category");
 
   useEffect(() => {
     async function load() {
@@ -221,7 +229,12 @@ export default function ExpensesPage() {
   }
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
-  const grouped = groupByCategory(expenses);
+  const grouped = viewMode === "category" ? groupByCategory(expenses) : groupByDate(expenses);
+  const entries = Object.entries(grouped);
+
+  if (viewMode === "date") {
+    entries.sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+  }
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -231,7 +244,7 @@ export default function ExpensesPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("Expenses")}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{t("One-time and variable spending")}</p>
         </div>
-        <Button onClick={() => { setEditing(undefined); setShowModal(true); }}>
+        <Button className="cursor-pointer"onClick={() => { setEditing(undefined); setShowModal(true); }}>
           <Plus size={16} />
           {t("Add Expense")}
         </Button>
@@ -241,7 +254,7 @@ export default function ExpensesPage() {
       <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm w-fit mb-6">
         <button
           onClick={() => setMonthKey(addMonths(monthKey, -1))}
-          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 cursor-pointer"
         >
           <ChevronLeft size={16} />
         </button>
@@ -250,7 +263,7 @@ export default function ExpensesPage() {
         </span>
         <button
           onClick={() => setMonthKey(addMonths(monthKey, 1))}
-          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 cursor-pointer"
         >
           <ChevronRight size={16} />
         </button>
@@ -270,38 +283,56 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Expenses by Category */}
+      {/* Expenses Grouped by Category/Date */}
+      <div className="flex bg-gray-100 rounded-2xl p-1 w-fit mb-2">
+          <button
+            onClick={() => setViewMode("category")}
+            className={`px-3 py-1 text-sm rounded-2xl gap-4 cursor-pointer ${
+            viewMode === "category" ? "bg-white shadow" : ""
+            }`}
+          >
+          {t("Category")}
+          </button>
+          <button
+            onClick={() => setViewMode("date")}
+            className={`px-3 py-1 text-sm rounded-2xl gap-4 cursor-pointer ${
+            viewMode === "date" ? "bg-white shadow" : ""
+            }`}
+          >
+          {t("Date")}
+        </button>
+      </div>
       {expenses.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <ShoppingBag size={40} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium">{t("No expenses for this month")}</p>
           <p className="text-sm mt-1">{t("Track your spending by adding expenses")}</p>
-          <Button className="mt-4" onClick={() => setShowModal(true)}>
+          <Button className="mt-4 cursor-pointer" onClick={() => setShowModal(true)}>
             <Plus size={16} />
             {t("Add First Expense")}
           </Button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={viewMode === "category" ? "space-y-5" : "space-y-0"}>
           {Object.entries(grouped).map(([cat, items]) => {
             const catTotal = items.reduce((s, e) => s + e.amount, 0);
             return (
               <div key={cat}>
-                <div className="flex items-center justify-between mb-2">
+                <div className={`flex items-center justify-between ${viewMode === "category" ? "mb-2" : "mb-0"}`}>
                   <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-semibold ${CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.Other}`}
+                    className={`text-xs px-2.5 py-1 rounded-2xl font-semibold ${viewMode === "category" ? CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.Other : ""}`}
                   >
-                    {t(cat)}
+                    {viewMode === "category" ? t(cat) : ""}
                   </span>
-                  <span className="text-sm font-semibold text-gray-600">
-                    {formatCurrency(catTotal)}
+                  <span className="text-sm font-semibold text-gray-600 mr-7">
+                    {viewMode === "category" ? t("Total: ") + formatCurrency(catTotal) : ""}
                   </span>
                 </div>
                 <div className="space-y-2">
                   {items.map((expense) => (
                     <div
                       key={expense.id}
-                      className="bg-white rounded-xl px-5 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between"
+                      className={`bg-white rounded-2xl px-5 py-3.5 shadow-sm border border-gray-100 items-center ${viewMode === "category" ? "flex justify-between" : "grid grid-cols-[180px_282px_200px]"}`}
                     >
                       <div>
                         <p className="font-medium text-gray-800">{expense.name}</p>
@@ -309,30 +340,33 @@ export default function ExpensesPage() {
                           {formatDate(expense.date, locale)}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      {viewMode === "date" && (
+                        <div className="justify-self-start">
+                          <span 
+                            className={`text-xs px-2.5 py-1 rounded-2xl font-semibold ${CATEGORY_COLORS[expense.category] ?? CATEGORY_COLORS.Other}`}
+                          >
+                            {t(expense.category)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 justify-self-end">
                         <span className="font-semibold text-gray-800">
                           {formatCurrency(expense.amount)}
                         </span>
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => openEdit(expense)}
-                            className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors"
+                            className="p-1.5 rounded-2xl text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors cursor-pointer"
                           >
                             <Pencil size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(expense.id)}
-                            className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            className="p-1.5 rounded-2xl text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
                         </div>
-                        {/*<button
-                          onClick={() => handleDelete(expense.id)}
-                          className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                        <Trash2 size={14} />
-                        </button>*/}
                       </div>
                     </div>
                   ))}

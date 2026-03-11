@@ -75,6 +75,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "e.g. Monthly savings transfer": "es. Trasferimento risparmio mensile",
     "e.g. 12.99": "es. 12.99",
     "Edit Expense": "Modifica Spesa",
+    "Total: ": "Totale: ",
 
     // language selector
     "Language": "Lingua",
@@ -106,16 +107,14 @@ const translations: Record<Lang, Record<string, string>> = {
     "Gifts": "Regali",
     "Home": "Casa",
     "Other": "Altro",
-
-    // recurring page
     "Housing": "Alloggio",
     "Utilities": "Utenze",
     "Insurance": "Assicurazione",
     "Subscriptions": "Abbonamenti",
     "Transport": "Trasporto",
-    "Education": "Istruzione",
-    "expense": "spesa",
-    
+    "Financing": "Finanziamento",
+    "Mortage": "Mutuo",
+
     // recurring page labels
     "Total monthly recurring": "Totale ricorrente mensile",
     "active expense": "spesa attiva",
@@ -131,6 +130,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "Upcoming": "In arrivo",
     "Starts:": "Inizia:",
     "Started:": "Iniziato:",
+    "expense": "spesa",
     
     // income page
     "Month": "Mese",

@@ -93,10 +93,10 @@ function IncomeForm({ monthKey, existing, onSave, onClose }: IncomeFormProps) {
         />
       </div>
       <div className="flex gap-2 pt-2">
-        <Button type="submit" className="flex-1">
+        <Button type="submit" className="flex-1 cursor-pointer">
           {existing ? t("Update Income") : t("Save Income")}
         </Button>
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button type="button" variant="secondary" className="cursor-pointer" onClick={onClose}>
           {t("Cancel")}
         </Button>
       </div>
@@ -137,7 +137,7 @@ export default function IncomePage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("Income")}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{t("Record your monthly earnings")}</p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
+        <Button className="cursor-pointer" onClick={() => setShowModal(true)}>
           <Plus size={16} />
           {t("Set Income")}
         </Button>
@@ -147,7 +147,7 @@ export default function IncomePage() {
       <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm w-fit mb-6">
         <button
           onClick={() => setMonthKey(addMonths(monthKey, -1))}
-          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 cursor-pointer"
         >
           <ChevronLeft size={16} />
         </button>
@@ -156,7 +156,7 @@ export default function IncomePage() {
         </span>
         <button
           onClick={() => setMonthKey(addMonths(monthKey, 1))}
-          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 cursor-pointer"
         >
           <ChevronRight size={16} />
         </button>
@@ -185,6 +185,7 @@ export default function IncomePage() {
               <Button
                 variant="secondary"
                 size="sm"
+                className="cursor-pointer"
                 onClick={() => setShowModal(true)}
               >
                 <Pencil size={14} />
@@ -193,6 +194,7 @@ export default function IncomePage() {
               <Button
                 variant="danger"
                 size="sm"
+                className="cursor-pointer"
                 onClick={() => handleDelete(currentIncome.id)}
               >
                 <Trash2 size={14} />
@@ -203,7 +205,7 @@ export default function IncomePage() {
         ) : (
           <div className="mt-4">
             <p className="text-gray-400 text-sm">{t("No income recorded for this month.")}</p>
-            <Button className="mt-3" size="sm" onClick={() => setShowModal(true)}>
+            <Button className="mt-3 cursor-pointer" size="sm" onClick={() => setShowModal(true)}>
               <Plus size={14} />
               {t("Add Income")}
             </Button>
@@ -234,7 +236,7 @@ export default function IncomePage() {
                 </span>
                 <button
                   onClick={() => handleDelete(income.id)}
-                  className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   <Trash2 size={14} />
                 </button>

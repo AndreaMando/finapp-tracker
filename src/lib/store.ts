@@ -233,13 +233,13 @@ export async function getTotalOneTimeForMonth(monthKey: MonthKey): Promise<numbe
 
 export const GOAL_COLORS = [
   "#6366f1",
-  "#10b981",
+  "#02dd1f",
   "#f59e0b",
   "#ef4444",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-  "#14b8a6",
+  "#0e63eb",
+  "#5899d6",
+  "#c9739e",
+  "#28a395",
 ];
 
 export async function getSavingsGoals(): Promise<SavingsGoal[]> {
@@ -293,12 +293,6 @@ export async function getGoalContributions(): Promise<GoalContribution[]> {
 export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {
   const all = await getGoalContributions();
   return all.filter((c) => c.goalId === goalId);
-}
-
-//Needs to be integrated with the monthly summary to show contributions for the current month, not just total contributions for the goal
-export async function getContributionsForMonth(monthKey: MonthKey): Promise<GoalContribution[]> {
-  const all = await getGoalContributions();
-  return all.filter((c) => c.monthKey === monthKey);
 }
 
 export async function addGoalContribution(

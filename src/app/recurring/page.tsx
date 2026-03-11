@@ -22,7 +22,8 @@ const CATEGORIES = [
   "Subscriptions",
   "Transport",
   "Health",
-  "Education",
+  "Financing",
+  "Mortage",
   "Other",
 ];
 
@@ -112,7 +113,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white cursor-pointer"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{t(c)}</option>
@@ -129,7 +130,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
             type="month"
             value={startMonth}
             onChange={(e) => { setStartMonth(e.target.value); setErrors((prev) => ({ ...prev, startMonth: "" })); }}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block cursor-pointer"
           />
 
           {/* overlay trick for small devices */}
@@ -140,18 +141,18 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
               onChange={(e) => { setStartMonth(e.target.value); setErrors((prev) => ({ ...prev, startMonth: "" })); }}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 opacity-0 absolute inset-0 cursor-pointer z-10"
             />
-            <span className="absolute inset-0 flex items-center px-3 py-2.5 text-sm border border-gray-200 rounded-xl pointer-events-none capitalize z-0">
+            <span className="absolute inset-0 flex items-center px-3 py-2.5 text-sm border border-gray-200 rounded-xl pointer-events-none capitalize z-0 cursor-pointer">
               {startMonth ? formatMonthKey(startMonth, locale) : "\u00A0"}
             </span>
           </label>
         </div>
         {errors.startMonth && <p className="text-red-500 text-xs mt-1">{errors.startMonth}</p>}
       </div>
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" className="flex-1">
+      <div className="flex gap-2 pt-2 cursor-pointer">
+        <Button type="submit" className="flex-1 cursor-pointer">
           {existing ? t("Update") : t("Add Expense")}
         </Button>
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button type="button" className="cursor-pointer" variant="secondary" onClick={onClose}>
           {t("Cancel")}
         </Button>
       </div>
@@ -166,7 +167,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   Subscriptions: "bg-pink-100 text-pink-700",
   Transport: "bg-orange-100 text-orange-700",
   Health: "bg-green-100 text-green-700",
-  Education: "bg-green-100 text-indigo-700",
+  Financing: "bg-lime-100 text-lime-700",
+  Mortage: "bg-indigo-100 text-indigo-700",
   Other: "bg-gray-100 text-gray-600",
 };
 
@@ -223,7 +225,7 @@ export default function RecurringPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("Recurring Expenses")}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{t("Bills, subscriptions, and fixed costs")}</p>
         </div>
-        <Button onClick={() => { setEditing(undefined); setShowModal(true); }}>
+        <Button className="cursor-pointer" onClick={() => { setEditing(undefined); setShowModal(true); }}>
           <Plus size={16} />
           {editing ? t("Update") : t("Add Expense")}
         </Button>
@@ -258,7 +260,7 @@ export default function RecurringPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleToggle(expense)}
-                    className="text-emerald-500 hover:text-emerald-600 transition-colors"
+                    className="text-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer"
                     title="Disable"
                   >
                     <ToggleRight size={22} />
@@ -283,13 +285,13 @@ export default function RecurringPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => openEdit(expense)}
-                      className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors cursor-pointer"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(expense.id)}
-                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -316,7 +318,7 @@ export default function RecurringPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleToggle(expense)}
-                    className="text-gray-400 hover:text-emerald-500 transition-colors"
+                    className="text-gray-400 hover:text-emerald-500 transition-colors cursor-pointer"
                     title="Enable"
                   >
                     <ToggleLeft size={22} />
@@ -341,13 +343,13 @@ export default function RecurringPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => openEdit(expense)}
-                      className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors cursor-pointer"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(expense.id)}
-                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -392,13 +394,13 @@ export default function RecurringPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => openEdit(expense)}
-                      className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-green-50 transition-colors cursor-pointer"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(expense.id)}
-                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>

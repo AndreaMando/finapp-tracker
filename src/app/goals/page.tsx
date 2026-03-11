@@ -104,7 +104,7 @@ function NewGoalForm({ onSave, onClose }: NewGoalFormProps) {
               type="date"
               value={deadline}
               onChange={(e) => { setDeadline(e.target.value); setErrors((p) => ({ ...p, deadline: "" })); }}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 capitalize hidden sm:block cursor-pointer"
             />
             <label className="relative block sm:hidden">
               <input
@@ -129,15 +129,15 @@ function NewGoalForm({ onSave, onClose }: NewGoalFormProps) {
               key={c}
               type="button"
               onClick={() => setColor(c)}
-              className={`w-7 h-7 rounded-full transition-transform ${color === c ? "scale-125 ring-2 ring-offset-2 ring-gray-400" : "hover:scale-110"}`}
+              className={`w-7 h-7 rounded-full transition-transform cursor-pointer ${color === c ? "scale-125 ring-2 ring-offset-2 ring-gray-400" : "hover:scale-110"}`}
               style={{ backgroundColor: c }}
             />
           ))}
         </div>
       </div>
       <div className="flex gap-2 pt-2">
-        <Button type="submit" className="flex-1">{t("Create Goal")}</Button>
-        <Button type="button" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
+        <Button type="submit" className="flex-1 cursor-pointer">{t("Create Goal")}</Button>
+        <Button type="button" variant="secondary" className="cursor-pointer" onClick={onClose}>{t("Cancel")}</Button>
       </div>
     </form>
   );
@@ -237,8 +237,8 @@ function ContributeForm({ goal, onSave, onClose }: ContributeFormProps) {
         />
       </div>
       <div className="flex gap-2 pt-2">
-        <Button type="submit" className="flex-1">{t("Add Contribution")}</Button>
-        <Button type="button" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
+        <Button type="submit" className="flex-1 cursor-pointer">{t("Add Contribution")}</Button>
+        <Button type="button" variant="secondary" className="cursor-pointer" onClick={onClose}>{t("Cancel")}</Button>
       </div>
     </form>
   );
@@ -322,7 +322,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
           </div>
           <button
             onClick={onDelete}
-            className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+            className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
           >
             <Trash2 size={14} />
           </button>
@@ -371,7 +371,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
           {!isComplete && (
             <Button
               size="sm"
-              className="flex-1"
+              className="flex-1 justify-center cursor-pointer"
               onClick={onContribute}
               style={{ backgroundColor: goal.color, borderColor: goal.color }}
             >
@@ -383,7 +383,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
             size="sm"
             variant="secondary"
             onClick={() => setShowHistory((v) => !v)}
-            className="flex-1"
+            className="flex-1 justify-center cursor-pointer"
           >
             <History size={14} />
             {t("History")}
@@ -419,7 +419,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
                     </div>
                     <button
                       onClick={() => handleDeleteContribution(c.id)}
-                      className="p-1 rounded text-gray-300 hover:text-red-500 transition-colors"
+                      className="p-1 rounded text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -471,7 +471,7 @@ export default function GoalsPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("Savings Goals")}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{t("Track your financial targets")}</p>
         </div>
-        <Button onClick={() => setShowNewGoal(true)}>
+        <Button className="cursor-pointer" onClick={() => setShowNewGoal(true)}>
           <Plus size={16} />
           {t("New Goal")}
         </Button>
@@ -551,7 +551,7 @@ export default function GoalsPage() {
           <p className="text-sm mt-1 mb-6">
             {t("Create a goal to start tracking your savings progress")}
           </p>
-          <Button onClick={() => setShowNewGoal(true)}>
+          <Button className="cursor-pointer" onClick={() => setShowNewGoal(true)}>
             <Plus size={16} />
             {t("Create First Goal")}
           </Button>
