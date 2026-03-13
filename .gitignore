@@ -12,7 +12,7 @@
 
 # testing
 /coverage
-toDoList.json
+toDoList.txt
 
 # next.js
 /.next/

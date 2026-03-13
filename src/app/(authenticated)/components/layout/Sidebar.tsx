@@ -11,15 +11,22 @@ import {
   Wallet,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { Button } from "@/components/ui/Button";
+import Cookies from 'js-cookie';
 
 // navItems labels will be translated inside the component
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/income", label: "Income", icon: TrendingUp },
   { href: "/recurring", label: "Recurring Expenses", icon: RefreshCw },
   { href: "/expenses", label: "Expenses", icon: ShoppingBag },
   { href: "/goals", label: "Savings Goals", icon: Target },
 ];
+
+const logout = () => {
+  Cookies.remove('auth_token');
+  window.location.href = '../../';
+};
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -63,7 +70,9 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-700">
-        <p className="text-gray-500 text-xs">{t("footerText")}</p>
+        <Button type="button" className="cursor-pointer" variant="secondary" onClick={logout}>
+          {t("Logout")}
+        </Button>
       </div>
     </aside>
   );

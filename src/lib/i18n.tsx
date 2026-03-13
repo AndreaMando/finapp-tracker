@@ -11,6 +11,10 @@ const translations: Record<Lang, Record<string, string>> = {
     // english keys map to themselves for convenience
   },
   it: {
+    // login page
+    "LogIn": "Accedi",
+    "Logout": "Esci",
+
     // Dashboard page
     "Dashboard": "Cruscotto",
     "Your monthly financial overview": "Panoramica finanziaria mensile",

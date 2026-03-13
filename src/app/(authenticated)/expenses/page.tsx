@@ -170,7 +170,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
       </div>
       <div className="flex gap-2 pt-2">
         <Button type="submit" className="flex-1  cursor-pointer">{existing ? t("Update") : t("Add Expense")}</Button>
-        <Button type="button" className=" cursor-pointer" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
+        <Button type="button" className="cursor-pointer" variant="secondary" onClick={onClose}>{t("Cancel")}</Button>
       </div>
     </form>
   );

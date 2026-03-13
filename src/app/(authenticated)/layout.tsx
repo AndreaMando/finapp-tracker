@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "@/app/globals.css";
+import { Sidebar } from "@/app/(authenticated)/components/layout/Sidebar";
 import { I18nProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body className="bg-gray-50 text-gray-900 antialiased">
         <I18nProvider>
           <div className="flex min-h-screen">
+            <Sidebar />
             {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}
             <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
           </div>
