@@ -126,7 +126,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("Dashboard")}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{t("Your monthly financial overview")}</p>
         </div>
-        <div className="flex items-center gap-4">
+        {/*<div className="flex items-center gap-4">
           <label className="text-sm text-gray-600">{t("Language")}:</label>
           <select
             value={lang}
@@ -136,7 +136,7 @@ export default function DashboardPage() {
             <option value="en">English</option>
             <option value="it">Italiano</option>
           </select>
-        </div>
+        </div>*/}
         {/* Month Selector */}
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
           <button

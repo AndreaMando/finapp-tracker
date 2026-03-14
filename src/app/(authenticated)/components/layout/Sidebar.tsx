@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -9,6 +10,9 @@ import {
   ShoppingBag,
   Target,
   Wallet,
+  Settings2,
+  SettingsIcon,
+  Settings2Icon,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
@@ -28,15 +32,29 @@ const logout = () => {
   window.location.href = '../../';
 };
 
-export function Sidebar() {
+export function Navbar() {
   const pathname = usePathname();
-  const { t } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // close dropdown if clicking outside of it
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
-    <aside className="w-64 min-h-screen bg-gray-900 text-white flex flex-col">
-      {/* Logo */}
-      <div className="px-6 py-6 border-b border-gray-700">
-        <div className="flex items-center gap-3">
+    <header className="w-full bg-gray-900 text-white border-b border-gray-700">
+      <div className="flex items-center justify-between px-6 py-3">
+
+        {/* Logo */}
+        <div className="flex items-center gap-3 shrink-0">
           <div className="w-9 h-9 bg-green-700 rounded-xl flex items-center justify-center">
             <Wallet size={20} />
           </div>
@@ -45,35 +63,66 @@ export function Sidebar() {
             <p className="text-gray-400 text-xs">{t("Personal Finance")}</p>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-green-800 text-white"
-                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
-              }`}
-            >
-              <Icon size={18} />
-              {t(label)}
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Navigation — centered */}
+        <nav className="flex items-center gap-1">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-colors ${
+                  isActive
+                    ? "bg-green-800 text-white text-sm"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white text-xs"
+                }`}
+              >
+                <Icon size={18} />
+                {t(label)}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Footer */}
-      <div className="px-6 py-4 border-t border-gray-700">
-        <Button type="button" className="cursor-pointer" variant="secondary" onClick={logout}>
-          {t("Logout")}
-        </Button>
+         {/* Settings */}
+        <div className="relative shrink-0" ref={dropdownRef}>
+          <button
+            onClick={() => setOpen((prev) => !prev)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer"
+          >
+            <SettingsIcon size={20} />
+          </button>
+          {open && (
+            <div className="absolute right-0 mt-2 w-52 bg-gray-800 border border-gray-700 rounded-xl shadow-lg py-2 z-50">
+
+              {/* Language selector */}
+              <div className="px-4 py-2">
+                <p className="text-xs text-gray-400 mb-1.5">{t("Language")}</p>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value as "en" | "it")}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-sm text-white cursor-pointer"
+                >
+                  <option value="en">English</option>
+                  <option value="it">Italiano</option>
+                </select>
+              </div>
+              
+              <div className="border-t border-gray-700 my-1" />
+
+              {/* Logout */}
+              <button
+                onClick={logout}
+                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
+              >
+                {t("Logout")}
+              </button>
+
+            </div>
+          )}
+        </div>
       </div>
-    </aside>
+    </header>
   );
 }

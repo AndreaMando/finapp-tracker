@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-50 text-gray-900 antialiased">
         <I18nProvider>
-          <div className="flex min-h-screen">
+          <div className="w64 min-h-screen">
             {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}
             <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
           </div>

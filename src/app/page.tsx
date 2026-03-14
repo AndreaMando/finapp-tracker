@@ -14,9 +14,9 @@ export default function LoginPage() {
 
   const handleLogin = () => {
     setIsLoggedIn(true); // temporary login simulation
-    //router.prefetch('/dashboard'); // prefetch dashboard page for faster navigation after animation
     Cookies.set('auth_token', 'true', { expires: 7, path: '/' });
-    setTimeout(() => {  // redirect to dashboard page after animation completes
+    // redirect to dashboard page after animation completes
+    setTimeout(() => {
       window.location.href = '/dashboard';
     }, 200);
   };
