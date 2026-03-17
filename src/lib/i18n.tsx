@@ -14,7 +14,23 @@ const translations: Record<Lang, Record<string, string>> = {
     // login page
     "LogIn": "Accedi",
     "Logout": "Esci",
+    "Invalid credentials. Please try again.": "Credenziali non valide. Riprova.",
+    "Welcome": "Benvenuto",
+    "username@email.com": "utente@email.com",
 
+    // register page
+    "Create your Account": "Crea il tuo Account",
+    "Register": "Registrati",
+    "Already have an account?": "Hai già un account?",
+    "Don't have an account?": "Non hai un account?",
+    "All fields are required.": "Tutti i campi sono obbligatori.",
+    "A user with this email already exists.": "Un utente con questa email esiste già.",
+    "Registration successful! Redirecting to login...": "Registrazione completata! Verrai reindirizzato al login...",
+    "Could not connect to the server. Please try again later.": "Impossibile connettersi al server. Riprova più tardi.",
+    "An internal error occurred.": "Si è verificato un errore interno.",
+
+    // API Errors
+    "Not authenticated": "Non autenticato",
     // Dashboard page
     "Dashboard": "Cruscotto",
     "Your monthly financial overview": "Panoramica finanziaria mensile",

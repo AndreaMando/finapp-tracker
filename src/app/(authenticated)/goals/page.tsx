@@ -57,8 +57,8 @@ function NewGoalForm({ onSave, onClose }: NewGoalFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    await addSavingsGoal(name.trim(), parseFloat(target), deadline, color);
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }    
+    await addSavingsGoal(name.trim(), parseFloat(target), new Date(deadline), color);
     onSave();
     onClose();
   }
@@ -261,8 +261,8 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
 
   useEffect(() => {
     async function load() {
-      const data = await getContributionsForGoal(goal.id);
-      data.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      let data = await getContributionsForGoal(goal.id);
+      data = data.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setContributions(data);
     }
     if (showHistory) {
@@ -272,7 +272,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
 
   const pct = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
   const remaining = goal.targetAmount - goal.currentAmount;
-  const deadline = new Date(goal.deadline);
+  const deadline = goal.deadline;
   const now = new Date();
   const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   const isComplete = goal.currentAmount >= goal.targetAmount;
@@ -285,8 +285,8 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
   async function handleDeleteContribution(id: string) {
     if (confirm(t("Remove this contribution?"))) {
       await deleteGoalContribution(id);
-      const data = (await getContributionsForGoal(goal.id));
-      data.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      let data = (await getContributionsForGoal(goal.id));
+      data = data.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setContributions(data);
       onRefresh();
     }
@@ -411,7 +411,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh }: GoalCardProps) {
                         <span className="text-gray-400 ml-2">· {c.note}</span>
                       )}
                       <p className="text-xs text-gray-400">
-                        {new Date(c.createdAt).toLocaleDateString(locale, {
+                        {c.createdAt.toLocaleDateString(locale, {
                           day: "numeric",
                         })}{" "}
                         {formatMonthKey(c.monthKey, locale)}
@@ -445,7 +445,7 @@ export default function GoalsPage() {
 
   useEffect(() => {
     async function load() {
-      const data = (await getSavingsGoals()).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      const data = (await getSavingsGoals()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       setGoals(data);
     }
     load();

@@ -10,9 +10,7 @@ import {
   ShoppingBag,
   Target,
   Wallet,
-  Settings2,
   SettingsIcon,
-  Settings2Icon,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";

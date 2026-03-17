@@ -3,6 +3,7 @@ import "@/app/globals.css";
 //import { Sidebar } from "@/app/(authenticated)/components/layout/Sidebar";      // old sidebar, now replaced by a top navbar
 import { Navbar } from "@/app/(authenticated)/components/layout/Sidebar";
 import { I18nProvider } from "@/lib/i18n";
+import AuthProvider from "../AuthProvider";
 
 export const metadata: Metadata = {
   title: "FinTrack – Personal Finance",
@@ -17,13 +18,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 text-gray-900 antialiased">
-        <I18nProvider>
-          <div className="w64 min-h-screen">
-            <Navbar />
-            {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}
-            <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
-          </div>
-        </I18nProvider>
+        <AuthProvider>
+          <I18nProvider>
+            <div className="w64 min-h-screen">
+              <Navbar />
+              {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}
+              <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
+            </div>
+          </I18nProvider>
+        </AuthProvider>
       </body>
     </html>
   );

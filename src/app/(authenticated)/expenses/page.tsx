@@ -68,7 +68,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
   const [name, setName] = useState(existing?.name ?? "");
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
   const [category, setCategory] = useState(existing?.category ?? CATEGORIES[0]);
-  const [date, setDate] = useState(existing?.date ?? today);
+  const [date, setDate] = useState(existing?.date ? new Date(existing.date).toISOString().split("T")[0] : today);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function validate() {
@@ -84,16 +84,18 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    const dateObject = new Date(date);
+
     if (existing) {
       await updateOneTimeExpense(existing.id, {
         monthKey: monthKey,
         name: name.trim(), 
         amount: parseFloat(amount), 
         category, 
-        date 
+        date: dateObject
       });
     } else {
-      await addOneTimeExpense(monthKey, name.trim(), parseFloat(amount), category, date);
+      await addOneTimeExpense(monthKey, name.trim(), parseFloat(amount), category, dateObject);
     }
     onSave();
     onClose();
@@ -186,8 +188,9 @@ function groupByCategory(expenses: OneTimeExpense[]): Record<string, OneTimeExpe
 
 function groupByDate(expenses: OneTimeExpense[]): Record<string, OneTimeExpense[]> {
   return expenses.reduce<Record<string, OneTimeExpense[]>>((acc, e) => {
-    if (!acc[e.date]) acc[e.date] = [];
-    acc[e.date].push(e);
+    const dateKey = e.date.toISOString().split("T")[0];
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(e);
     return acc;
   }, {});
 }
@@ -205,7 +208,7 @@ export default function ExpensesPage() {
   useEffect(() => {
     async function load() {
       const data = await getOneTimeExpensesForMonth(monthKey);
-      data.sort((a, b) => b.date.localeCompare(a.date));
+      data.sort((a, b) => b.date.getTime() - a.date.getTime());
       setExpenses(data);
     }
     load();
@@ -337,7 +340,7 @@ export default function ExpensesPage() {
                       <div>
                         <p className="font-medium text-gray-800">{expense.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {formatDate(expense.date, locale)}
+                          {formatDate(expense.date.toISOString(), locale)}
                         </p>
                       </div>
                       {viewMode === "date" && (

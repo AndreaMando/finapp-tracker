@@ -9,7 +9,7 @@ export interface MonthlyIncome {
   monthKey: MonthKey;
   amount: number;
   note: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface RecurringExpense {
@@ -19,7 +19,7 @@ export interface RecurringExpense {
   category: string;
   active: boolean;
   startMonth: MonthKey; // month when expense begins (inclusive)
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface OneTimeExpense {
@@ -28,8 +28,8 @@ export interface OneTimeExpense {
   name: string;
   amount: number;
   category: string;
-  date: string;
-  createdAt: string;
+  date: Date;
+  createdAt: Date;
 }
 
 export interface SavingsGoal {
@@ -37,9 +37,9 @@ export interface SavingsGoal {
   name: string;
   targetAmount: number;
   currentAmount: number;
-  deadline: string; // ISO date string
+  deadline: Date;
   color: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface GoalContribution {
@@ -48,7 +48,7 @@ export interface GoalContribution {
   monthKey: MonthKey;
   amount: number;
   note: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 // -----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ export async function upsertIncome(monthKey: MonthKey, amount: number, note: str
     monthKey,
     amount,
     note,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
   const res = await fetch(`${API_BASE}/incomes`, {
     method: "POST",
@@ -141,7 +141,7 @@ export async function addRecurringExpense(
     category,
     active: true,
     startMonth,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
   const res = await fetch(`${API_BASE}/recurring`, {
     method: "POST",
@@ -190,7 +190,7 @@ export async function addOneTimeExpense(
   name: string,
   amount: number,
   category: string,
-  date: string
+  date: Date
 ): Promise<OneTimeExpense> {
   const entry: OneTimeExpense = {
     id: uid(),
@@ -199,7 +199,7 @@ export async function addOneTimeExpense(
     amount,
     category,
     date,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
   const res = await fetch(`${API_BASE}/one-time`, {
     method: "POST",
@@ -250,7 +250,7 @@ export async function getSavingsGoals(): Promise<SavingsGoal[]> {
 export async function addSavingsGoal(
   name: string,
   targetAmount: number,
-  deadline: string,
+  deadline: Date,
   color: string
 ): Promise<SavingsGoal> {
   const entry: SavingsGoal = {
@@ -260,7 +260,7 @@ export async function addSavingsGoal(
     currentAmount: 0,
     deadline,
     color,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
   const res = await fetch(`${API_BASE}/goals`, {
     method: "POST",
@@ -307,7 +307,7 @@ export async function addGoalContribution(
     monthKey,
     amount,
     note,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
   const res = await fetch(`${API_BASE}/contributions`, {
     method: "POST",
