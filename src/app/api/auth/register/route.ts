@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json();
 
-    // --- Validazione Input ---
+    // Input validation
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: "All fields are required." },
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // --- Controllo se l'utente esiste già ---
+    // Check if user with the same email already exists
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, email),
     });
@@ -28,10 +28,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // --- Hashing della password (MAI salvare password in chiaro) ---
+    // Password hashing
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // --- Inserimento nuovo utente nel DB ---
+    // New user creation in the database
     const newUser = await db
       .insert(users)
       .values({

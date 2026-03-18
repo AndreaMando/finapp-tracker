@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
-import DashboardPage from "./(authenticated)/dashboard/page";
-import { Globe } from "lucide-react";
+import { DashboardPreview } from "@/components/DashboardPreview";
+import { Globe, Wallet } from "lucide-react";
 
 export default function LoginPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,82 +38,101 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-white overflow-hidden">
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
-        <Globe size={16} className="text-gray-400" />
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value as "en" | "it")}
-          className="border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 cursor-pointer bg-white"
+  <div className="relative h-screen w-full bg-white overflow-hidden">
+    <AnimatePresence mode="wait">
+      {!isLoggedIn ? (
+        <motion.div
+          key="login-screen"
+          exit={{ opacity: 0, x: -100 }}
+          className="flex h-screen w-full"
         >
-          <option value="en">English</option>
-          <option value="it">Italiano</option>
-        </select>
-      </div>
-      <AnimatePresence mode="wait">
-        {!isLoggedIn ? (
-          <motion.div 
-            key="login-screen"
-            exit={{ opacity: 0, x: -100 }}
-            className="flex min-h-screen w-full"
-          >
-            {/* left column - for login form */}
-            <div className="w-full lg:w-1/5 flex items-center p-12 bg-white z-20">
-              <div className="w-full max-w-md">
-                <h1 className="text-3xl font-bold mb-6">{t("Welcome")}</h1>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
-                      placeholder={t("username@email.com")}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="password"  className="block text-sm font-medium text-gray-700">Password</label>
-                    <input
-                      type="password"
-                      id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                  {error && <p className="text-red-500 text-sm">{error}</p>}
-                  <button 
-                    type="submit"
-                    className="w-full bg-black text-white py-3 rounded-xl cursor-pointer"
-                  >
-                    {t("LogIn")}
-                  </button>
-                </form>
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-600">
-                    {t("Don't have an account?")}{" "}
-                    <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-                      {t("Register")}
-                    </Link>
-                  </p>
-                </div>
+          {/* Left column */}
+          <div className="w-full lg:w-[420px] shrink-0 flex flex-col justify-center px-12 py-16 bg-white z-20 border-r border-gray-100">
+            
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-10">
+              <div className="w-9 h-9 bg-green-700 rounded-xl flex items-center justify-center">
+                <Wallet size={18} className="text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-base leading-tight">FinTrack</p>
+                <p className="text-gray-400 text-xs">{t("Personal Finance")}</p>
               </div>
             </div>
 
-            {/* dashboard preview (4/5) with layoutId */}
-            <div className="hidden lg:flex lg:w-4/5 bg-gray-50 items-center justify-center p-12 relative">
-              <motion.div 
-                layoutId="dashboard-container"
-                transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-                className="w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 opacity-60"
+            {/* Language selector */}
+            <div className="flex items-center gap-2 mb-8">
+              <Globe size={14} className="text-gray-400" />
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value as "en" | "it")}
+                className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-500 cursor-pointer bg-white"
               >
-                <div className="pointer-events-none scale-90 origin-top">
-                  <DashboardPage />
+                <option value="en">English</option>
+                <option value="it">Italiano</option>
+              </select>
+            </div>
+
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">{t("Welcome back")}</h1>
+            <p className="text-sm text-gray-400 mb-8">{t("Sign in to your account to continue")}</p>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                <input
+                  type="email" id="email" value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                  placeholder={t("username@email.com")} required
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-xs font-medium text-gray-600 mb-1">Password</label>
+                <input
+                  type="password" id="password" value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                  placeholder="••••••••" required
+                />
+              </div>
+              {error && <p className="text-red-500 text-xs">{error}</p>}
+              <button type="submit" className="w-full bg-gray-900 hover:bg-black text-white py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer mt-2">
+                {t("Log in")}
+              </button>
+            </form>
+
+            <p className="text-xs text-gray-400 text-center mt-6">
+              {t("Don't have an account?")}{" "}
+              <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+                {t("Register")}
+              </Link>
+            </p>
+          </div>
+
+          {/* Right column — static preview */}
+          <div className="hidden lg:flex h-full flex-1 bg-gray-50 items-center justify-center p-10">
+            <motion.div
+              layoutId="dashboard-container"
+              transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
+              className="w-full max-h-[85vh] bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 opacity-70"
+            >
+              {/* Navbar mock */}
+              <div className="bg-gray-900 h-10 flex items-center px-5 gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-green-700 rounded-md" />
+                  <span className="text-white text-xs font-medium">FinTrack</span>
+                </div>
+                <div className="flex gap-1 mx-auto">
+                  {["Cruscotto","Entrate","Spese Ricorrenti","Spese","Obiettivi"].map((item, i) => (
+                    <span key={item} className={`text-xs px-3 py-1 rounded-lg ${i === 0 ? "bg-green-800 text-white" : "text-gray-400"}`}>
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Dashboard content */}
+              <div className="pointer-events-none">
+                  <DashboardPreview />
                 </div>
               </motion.div>
             </div>
@@ -131,7 +150,7 @@ export default function LoginPage() {
               animate={{ opacity: 1 }} 
               transition={{ delay: 0.5 }}
             >
-              <DashboardPage />
+              <DashboardPreview />
             </motion.div>
           </motion.div>
         )}

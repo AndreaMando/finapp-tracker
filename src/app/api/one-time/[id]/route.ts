@@ -1,29 +1,42 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { oneTimeExpenses } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { withCors, handleOptions } from "@/lib/cors";
+import { auth } from "@/lib/auth";
+import { eq, and } from "drizzle-orm";
 
-export async function OPTIONS() {
-  return handleOptions();
-}
+export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-export async function PUT(req: NextRequest, context: any) {
-  const { id } = await context.params;
-  const updates = await req.json();
-  if ("active" in updates) {
-    // ensure numeric value for SQLite
-    updates.active = updates.active ? 1 : 0;
+  try {
+    const body = await req.json();
+    // Setting up data for update - only include fields that are provided in the request
+    const updateData: any = {};
+    if (body.name) updateData.name = body.name;
+    if (body.amount !== undefined) updateData.amount = String(body.amount);
+    if (body.category) updateData.category = body.category;
+    if (body.date) updateData.date = new Date(body.date);
+    if (body.monthKey) updateData.monthKey = body.monthKey;
+
+    await db.update(oneTimeExpenses)
+      .set(updateData)
+      .where(and(eq(oneTimeExpenses.id, params.id), eq(oneTimeExpenses.userId, session.user.id)));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Error updating" }, { status: 500 });
   }
-  await db
-    .update(oneTimeExpenses)
-    .set(updates)
-    .where(eq(oneTimeExpenses.id, id));
-  return withCors(new NextResponse(null, { status: 204 }));
 }
 
-export async function DELETE(req: NextRequest, context: any) {
-  const { id } = await context.params;
-  await db.delete(oneTimeExpenses).where(eq(oneTimeExpenses.id, id));
-  return withCors(new NextResponse(null, { status: 204 }));
+export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  await db.delete(oneTimeExpenses).where(
+    and(eq(oneTimeExpenses.id, params.id), eq(oneTimeExpenses.userId, session.user.id))
+  );
+
+  return NextResponse.json({ success: true });
 }

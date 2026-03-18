@@ -12,11 +12,13 @@ const translations: Record<Lang, Record<string, string>> = {
   },
   it: {
     // login page
-    "LogIn": "Accedi",
+    "Log in": "Accedi",
     "Logout": "Esci",
     "Invalid credentials. Please try again.": "Credenziali non valide. Riprova.",
     "Welcome": "Benvenuto",
     "username@email.com": "utente@email.com",
+    "Welcome back": "Bentornato",
+    "Sign in to your account to continue": "Accedi al tuo account per continuare",
 
     // register page
     "Create your Account": "Crea il tuo Account",

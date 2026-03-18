@@ -18,7 +18,7 @@ export interface RecurringExpense {
   amount: number;
   category: string;
   active: boolean;
-  startMonth: MonthKey; // month when expense begins (inclusive)
+  startMonth: MonthKey;
   createdAt: Date;
 }
 
@@ -57,10 +57,6 @@ export interface GoalContribution {
 
 const API_BASE = "/api";
 
-function uid(): string {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
 export function currentMonthKey(): MonthKey {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -70,16 +66,14 @@ export function formatMonthKey(key: MonthKey, locale: string = "en-US"): string 
   const [year, month] = key.split("-");
   const date = new Date(Number(year), Number(month) - 1, 1);
   let formatted = date.toLocaleDateString(locale, { month: "long", year: "numeric" });
-  // Italian month names come back lowercase; capitalize the first letter to match UI style
   if (locale.startsWith("it") && formatted.length > 0) {
     formatted = formatted[0].toUpperCase() + formatted.slice(1);
   }
   return formatted;
 }
 
-// format a full ISO date string (e.g. for one-time expenses or deadlines)
-export function formatDate(iso: string, locale: string = "en-US"): string {
-  const d = new Date(iso);
+export function formatDate(iso: string | Date, locale: string = "en-US"): string {
+  const d = typeof iso === 'string' ? new Date(iso) : iso;
   let formatted = d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
   if (locale.startsWith("it") && formatted.length > 0) {
     formatted = formatted[0].toUpperCase() + formatted.slice(1);
@@ -87,11 +81,23 @@ export function formatDate(iso: string, locale: string = "en-US"): string {
   return formatted;
 }
 
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    throw new Error(`API Error: ${res.statusText}`);
+  }
+  return res.json();
+}
+
 // ─── Income ───────────────────────────────────────────────────────────────────
 
 export async function getIncomes(): Promise<MonthlyIncome[]> {
-  const res = await fetch(`${API_BASE}/incomes`);
-  return res.json();
+  const data = await fetchJson<any[]>(`${API_BASE}/incomes`);
+  return data.map(d => ({
+    ...d,
+    amount: Number(d.amount),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function getIncomeForMonth(monthKey: MonthKey): Promise<MonthlyIncome | undefined> {
@@ -100,19 +106,13 @@ export async function getIncomeForMonth(monthKey: MonthKey): Promise<MonthlyInco
 }
 
 export async function upsertIncome(monthKey: MonthKey, amount: number, note: string): Promise<MonthlyIncome> {
-  const entry: MonthlyIncome = {
-    id: uid(),
-    monthKey,
-    amount,
-    note,
-    createdAt: new Date(),
-  };
   const res = await fetch(`${API_BASE}/incomes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(entry),
+    body: JSON.stringify({ monthKey, amount, note }),
   });
-  return res.json();
+  const d = await res.json();
+  return { ...d, amount: Number(d.amount), createdAt: new Date(d.createdAt) };
 }
 
 export async function deleteIncome(id: string): Promise<void> {
@@ -122,10 +122,13 @@ export async function deleteIncome(id: string): Promise<void> {
 // ─── Recurring Expenses ───────────────────────────────────────────────────────
 
 export async function getRecurringExpenses(): Promise<RecurringExpense[]> {
-  const res = await fetch(`${API_BASE}/recurring`);
-  const data: RecurringExpense[] = await res.json();
-  // the backend stores `active` as 0/1; convert to boolean for client
-  return data.map((e) => ({ ...e, active: !!e.active }));
+  const data = await fetchJson<any[]>(`${API_BASE}/recurring`);
+  return data.map(d => ({
+    ...d,
+    amount: Number(d.amount),
+    active: Boolean(d.active),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function addRecurringExpense(
@@ -134,21 +137,13 @@ export async function addRecurringExpense(
   category: string,
   startMonth: MonthKey
 ): Promise<RecurringExpense> {
-  const entry: RecurringExpense = {
-    id: uid(),
-    name,
-    amount,
-    category,
-    active: true,
-    startMonth,
-    createdAt: new Date(),
-  };
   const res = await fetch(`${API_BASE}/recurring`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(entry),
+    body: JSON.stringify({ name, amount, category, startMonth }),
   });
-  return res.json();
+  const d = await res.json();
+  return { ...d, amount: Number(d.amount), active: Boolean(d.active), createdAt: new Date(d.createdAt) };
 }
 
 export async function updateRecurringExpense(
@@ -176,8 +171,13 @@ export async function getTotalRecurring(monthKey: MonthKey = currentMonthKey()):
 // ─── One-Time Expenses ────────────────────────────────────────────────────────
 
 export async function getOneTimeExpenses(): Promise<OneTimeExpense[]> {
-  const res = await fetch(`${API_BASE}/one-time`);
-  return res.json();
+  const data = await fetchJson<any[]>(`${API_BASE}/one-time`);
+  return data.map(d => ({
+    ...d,
+    amount: Number(d.amount),
+    date: new Date(d.date),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function getOneTimeExpensesForMonth(monthKey: MonthKey): Promise<OneTimeExpense[]> {
@@ -192,21 +192,18 @@ export async function addOneTimeExpense(
   category: string,
   date: Date
 ): Promise<OneTimeExpense> {
-  const entry: OneTimeExpense = {
-    id: uid(),
-    monthKey,
-    name,
-    amount,
-    category,
-    date,
-    createdAt: new Date(),
-  };
   const res = await fetch(`${API_BASE}/one-time`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(entry),
+    body: JSON.stringify({ monthKey, name, amount, category, date }),
   });
-  return res.json();
+  const d = await res.json();
+  return {
+    ...d,
+    amount: Number(d.amount),
+    date: new Date(d.date),
+    createdAt: new Date(d.createdAt)
+  };
 }
 
 export async function updateOneTimeExpense(
@@ -243,8 +240,14 @@ export const GOAL_COLORS = [
 ];
 
 export async function getSavingsGoals(): Promise<SavingsGoal[]> {
-  const res = await fetch(`${API_BASE}/goals`);
-  return res.json();
+  const data = await fetchJson<any[]>(`${API_BASE}/goals`);
+  return data.map(d => ({
+    ...d,
+    targetAmount: Number(d.targetAmount),
+    currentAmount: Number(d.currentAmount),
+    deadline: new Date(d.deadline),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function addSavingsGoal(
@@ -253,21 +256,19 @@ export async function addSavingsGoal(
   deadline: Date,
   color: string
 ): Promise<SavingsGoal> {
-  const entry: SavingsGoal = {
-    id: uid(),
-    name,
-    targetAmount,
-    currentAmount: 0,
-    deadline,
-    color,
-    createdAt: new Date(),
-  };
   const res = await fetch(`${API_BASE}/goals`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(entry),
+    body: JSON.stringify({ name, targetAmount, deadline, color }),
   });
-  return res.json();
+  const d = await res.json();
+  return {
+    ...d,
+    targetAmount: Number(d.targetAmount),
+    currentAmount: Number(d.currentAmount),
+    deadline: new Date(d.deadline),
+    createdAt: new Date(d.createdAt)
+  };
 }
 
 export async function updateSavingsGoal(
@@ -286,8 +287,12 @@ export async function deleteSavingsGoal(id: string): Promise<void> {
 }
 
 export async function getGoalContributions(): Promise<GoalContribution[]> {
-  const res = await fetch(`${API_BASE}/contributions`);
-  return res.json();
+  const data = await fetchJson<any[]>(`${API_BASE}/contributions`);
+  return data.map(d => ({
+    ...d,
+    amount: Number(d.amount),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {
@@ -301,20 +306,17 @@ export async function addGoalContribution(
   amount: number,
   note: string
 ): Promise<GoalContribution> {
-  const entry: GoalContribution = {
-    id: uid(),
-    goalId,
-    monthKey,
-    amount,
-    note,
-    createdAt: new Date(),
-  };
   const res = await fetch(`${API_BASE}/contributions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(entry),
+    body: JSON.stringify({ goalId, monthKey, amount, note }),
   });
-  return res.json();
+  const d = await res.json();
+  return {
+    ...d,
+    amount: Number(d.amount),
+    createdAt: new Date(d.createdAt)
+  };
 }
 
 export async function deleteGoalContribution(id: string): Promise<void> {
@@ -335,15 +337,15 @@ export interface MonthlySummary {
 
 export async function getMonthlySummary(monthKey: MonthKey): Promise<MonthlySummary> {
   const income = (await getIncomeForMonth(monthKey))?.amount ?? 0;
-  const recurringExpenses = await getTotalRecurring();
+  const recurringExpenses = await getTotalRecurring(monthKey);
   const oneTimeExpenses = await getTotalOneTimeForMonth(monthKey);
   const goalContributions = (await getGoalContributions())
     .filter((c) => c.monthKey === monthKey)
     .reduce((sum, c) => sum + c.amount, 0);
-  // do not include goal contributions in the "total expenses" figure
+  
   const totalExpenses = recurringExpenses + oneTimeExpenses;
-  // savings are calculated against actual spending, not contributions
   const savings = income - totalExpenses;
+  
   return {
     monthKey,
     income,
