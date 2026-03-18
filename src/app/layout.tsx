@@ -4,7 +4,7 @@ import AuthProvider from "./AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FinTrack",
+  title: "Vaulty",
   description: "Your personal finance tracker",
 };
 

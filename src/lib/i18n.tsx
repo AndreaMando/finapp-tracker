@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type Lang = "en" | "it";
-const STORAGE_KEY = "fintrack_language";
+const STORAGE_KEY = "vaulty_language";
 const DEFAULT_LANG: Lang = "en";
 
 const translations: Record<Lang, Record<string, string>> = {
@@ -19,6 +19,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "username@email.com": "utente@email.com",
     "Welcome back": "Bentornato",
     "Sign in to your account to continue": "Accedi al tuo account per continuare",
+    "Show": "Mostra",
+    "Hide": "Nascondi",
+    "Sign in": "Accedi",
+    "Signing in...": "Accesso in corso...",
 
     // register page
     "Create your Account": "Crea il tuo Account",
