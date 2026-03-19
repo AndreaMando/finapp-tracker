@@ -4,10 +4,12 @@ import "@/app/globals.css";
 import { Navbar } from "@/app/(authenticated)/components/layout/Sidebar";
 import { I18nProvider } from "@/lib/i18n";
 import AuthProvider from "../AuthProvider";
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
-  title: "FinTrack – Personal Finance",
-  description: "Track your income, expenses, and savings goals",
+  title: "Vaulty",
+  description: "Your personal finance tracker",
 };
 
 export default function RootLayout({
@@ -25,6 +27,8 @@ export default function RootLayout({
               {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}
               <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
             </div>
+            <SpeedInsights />
+            <Analytics />
           </I18nProvider>
         </AuthProvider>
       </body>

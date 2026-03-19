@@ -57,7 +57,7 @@ export function Navbar() {
             <Wallet size={20} />
           </div>
           <div>
-            <p className="font-bold text-white text-base leading-tight">FinTrack</p>
+            <p className="font-bold text-white text-base leading-tight">Vaulty</p>
             <p className="text-gray-400 text-xs">{t("Personal Finance")}</p>
           </div>
         </div>
@@ -112,7 +112,7 @@ export function Navbar() {
               {/* Logout */}
               <button
                 onClick={logout}
-                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
+                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors cursor-pointer"
               >
                 {t("Logout")}
               </button>

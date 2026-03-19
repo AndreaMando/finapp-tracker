@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: DrizzleAdapter(db),
   pages: {
     signIn: "/",

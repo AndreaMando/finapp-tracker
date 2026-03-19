@@ -12,21 +12,21 @@ const translations: Record<Lang, Record<string, string>> = {
   },
   it: {
     // login page
-    "Log in": "Accedi",
+    "Sign in": "Accedi",
     "Logout": "Esci",
     "Invalid credentials. Please try again.": "Credenziali non valide. Riprova.",
     "Welcome": "Benvenuto",
     "username@email.com": "utente@email.com",
     "Welcome back": "Bentornato",
     "Sign in to your account to continue": "Accedi al tuo account per continuare",
-    "Show": "Mostra",
-    "Hide": "Nascondi",
-    "Sign in": "Accedi",
+    "Show password": "Mostra password",
+    "Hide password": "Nascondi password",
     "Signing in...": "Accesso in corso...",
+    "Because our goal is to make your goals easier.": "Perché il nostro obiettivo è rendere i tuoi obiettivi più facili.",
 
     // register page
     "Create your Account": "Crea il tuo Account",
-    "Register": "Registrati",
+    "Sign up": "Registrati",
     "Already have an account?": "Hai già un account?",
     "Don't have an account?": "Non hai un account?",
     "All fields are required.": "Tutti i campi sono obbligatori.",
@@ -34,11 +34,23 @@ const translations: Record<Lang, Record<string, string>> = {
     "Registration successful! Redirecting to login...": "Registrazione completata! Verrai reindirizzato al login...",
     "Could not connect to the server. Please try again later.": "Impossibile connettersi al server. Riprova più tardi.",
     "An internal error occurred.": "Si è verificato un errore interno.",
+    "Join Vaulty and take control of your finances." : "Unisciti a Vaulty e gestisci le tue finanze.",
+    "Creating account..."  : "Creazione account...",
+    "Too short" : "Troppo corta",
+    "Fair" : "Discreta",
+    "Strong" : "Sicura",
+    "Full overview" : "Panoramica completa",
+    "Recurring expenses" : "Spese ricorrenti",
+    "Savings goals" : "Obiettivi di risparmio",
+    "Confirm Password" : "Conferma Password",
+    "Passwords do not match" : "Le password non corrispondono",
+    "Password Requirements" : "Requisiti password",
 
     // API Errors
     "Not authenticated": "Non autenticato",
+
     // Dashboard page
-    "Dashboard": "Cruscotto",
+    "Dashboard": "Panoramica",
     "Your monthly financial overview": "Panoramica finanziaria mensile",
     Income: "Entrate",
     "Total Expenses": "Spese Totali",
