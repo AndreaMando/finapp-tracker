@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900 antialiased">
+      <body className="bg-[#0d0d0d] text-[#9ca3af] antialiased">
         <AuthProvider>
           <I18nProvider>
             <div className="w64 min-h-screen">

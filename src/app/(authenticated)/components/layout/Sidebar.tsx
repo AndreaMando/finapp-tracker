@@ -67,22 +67,20 @@ export function Navbar() {
         {/* Logo */}
         <div className="flex items-center gap-2.5 shrink-0">
           <div
-            style={{ width: 28, height: 28, borderRadius: "22%", overflow: "hidden", flexShrink: 0 }}
+            style={{ width: 52, height: 52, borderRadius: "22%", overflow: "hidden", flexShrink: 0 }}
           >
             <Image
-              src="../../../public/logo.png"
+              src="/logo.png"
               alt="Vaulty logo"
-              width={28}
-              height={28}
+              width={144}
+              height={144}
+              sizes="52px"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
               priority
             />
           </div>
           <div>
-            <p className="font-bold text-white text-sm tracking-tight leading-none">Vaulty</p>
-            <p className="text-[#6b7280] text-[10px] tracking-widest uppercase mt-0.5">
-              {t("Personal Finance")}
-            </p>
+            <p className="font-bold text-white text-3xl tracking-tight leading-none">Vaulty</p>
           </div>
         </div>
 

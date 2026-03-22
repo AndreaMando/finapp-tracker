@@ -45,6 +45,15 @@ const translations: Record<Lang, Record<string, string>> = {
     "Confirm Password" : "Conferma Password",
     "Passwords do not match" : "Le password non corrispondono",
     "Password Requirements" : "Requisiti password",
+    "Name is required" : "Il nome è obbligatorio",
+    "Password is required" : "La password è obbligatoria",
+    "Confirm Password is required" : "La conferma password è obbligatoria",
+    "Email is required" : "L'email è obbligatoria",
+    "Email is invalid" : "L'email non è valida",
+    "Password is too short" : "La password è troppo corta",
+    "Password is too common" : "La password è troppo comune",
+    "Password is too simple" : "La password è troppo semplice",
+    "Password is too long" : "La password è troppo lunga",
 
     // API Errors
     "Not authenticated": "Non autenticato",
