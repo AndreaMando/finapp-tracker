@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -9,25 +10,24 @@ import {
   RefreshCw,
   ShoppingBag,
   Target,
-  Wallet,
-  SettingsIcon,
+  Settings,
+  LogOut,
+  Globe,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import { Button } from "@/components/ui/Button";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
-// navItems labels will be translated inside the component
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/income", label: "Income", icon: TrendingUp },
-  { href: "/recurring", label: "Recurring Expenses", icon: RefreshCw },
-  { href: "/expenses", label: "Expenses", icon: ShoppingBag },
-  { href: "/goals", label: "Savings Goals", icon: Target },
+  { href: "/dashboard", label: "Dashboard",         icon: LayoutDashboard },
+  { href: "/income",    label: "Income",             icon: TrendingUp      },
+  { href: "/recurring", label: "Recurring Expenses", icon: RefreshCw       },
+  { href: "/expenses",  label: "Expenses",           icon: ShoppingBag     },
+  { href: "/goals",     label: "Savings Goals",      icon: Target          },
 ];
 
 const logout = () => {
-  Cookies.remove('auth_token');
-  window.location.href = '../../';
+  Cookies.remove("auth_token");
+  window.location.href = "../../";
 };
 
 export function Navbar() {
@@ -36,7 +36,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // close dropdown if clicking outside of it
+  // P2: close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -47,80 +47,191 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // P1: close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   return (
-    <header className="w-full bg-gray-900 text-white border-b border-gray-700">
-      <div className="flex items-center justify-between px-6 py-3">
+    // P1: semantic <header> with landmark
+    <header
+      className="w-full bg-[#111318] border-b border-[#1a1d24]"
+      role="banner"
+    >
+      <div className="flex items-center justify-between px-6 h-14">
 
         {/* Logo */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 bg-green-700 rounded-xl flex items-center justify-center">
-            <Wallet size={20} />
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div
+            style={{ width: 28, height: 28, borderRadius: "22%", overflow: "hidden", flexShrink: 0 }}
+          >
+            <Image
+              src="../../../public/logo.png"
+              alt="Vaulty logo"
+              width={28}
+              height={28}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              priority
+            />
           </div>
           <div>
-            <p className="font-bold text-white text-base leading-tight">Vaulty</p>
-            <p className="text-gray-400 text-xs">{t("Personal Finance")}</p>
+            <p className="font-bold text-white text-sm tracking-tight leading-none">Vaulty</p>
+            <p className="text-[#6b7280] text-[10px] tracking-widest uppercase mt-0.5">
+              {t("Personal Finance")}
+            </p>
           </div>
         </div>
 
-        {/* Navigation — centered */}
-        <nav className="flex items-center gap-1">
+        {/* P1: nav landmark with aria-label */}
+        <nav
+          aria-label={t("Main navigation")}
+          className="hidden md:flex items-center gap-1"
+        >
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
+            const isActive = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-colors ${
-                  isActive
-                    ? "bg-green-800 text-white text-sm"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white text-xs"
-                }`}
+                // P1: aria-current for screen readers
+                aria-current={isActive ? "page" : undefined}
+                className={`
+                  flex items-center gap-2 px-3 py-2 rounded-xl font-medium
+                  transition-colors duration-150
+                  // P2: min touch target via padding
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111318]
+                  ${isActive
+                    ? "bg-[#00FFA3] text-[#0d0d0d] text-sm"
+                    : "text-[#9ca3af] hover:bg-[#1a1d24] hover:text-white text-xs"
+                  }
+                `}
               >
-                <Icon size={18} />
+                {/* P1: icon aria-hidden since label is present */}
+                <Icon size={16} aria-hidden="true" />
                 {t(label)}
               </Link>
             );
           })}
         </nav>
 
-         {/* Settings */}
+        {/* Settings dropdown */}
         <div className="relative shrink-0" ref={dropdownRef}>
+          {/* P2: 44×44 touch target */}
           <button
             onClick={() => setOpen((prev) => !prev)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer"
+            // P1: aria-expanded + aria-haspopup + aria-label
+            aria-expanded={open}
+            aria-haspopup="true"
+            aria-label={t("Open settings")}
+            className="
+              w-11 h-11 flex items-center justify-center rounded-xl
+              text-[#9ca3af] hover:bg-[#1a1d24] hover:text-white
+              transition-colors duration-150 cursor-pointer
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111318]
+              // P2: scale feedback on press
+              active:scale-95
+            "
           >
-            <SettingsIcon size={20} />
+            <Settings size={18} aria-hidden="true" />
           </button>
-          {open && (
-            <div className="absolute right-0 mt-2 w-52 bg-gray-800 border border-gray-700 rounded-xl shadow-lg py-2 z-50">
 
+          {/* Dropdown menu */}
+          {open && (
+            // P1: role="menu" for screen readers
+            <div
+              role="menu"
+              aria-label={t("Settings menu")}
+              className="
+                absolute right-0 mt-2 w-56
+                bg-[#1a1d24] border border-[#252830]
+                rounded-xl shadow-2xl py-2 z-50
+                // P7: subtle entrance animation
+                animate-in fade-in slide-in-from-top-2 duration-150
+              "
+            >
               {/* Language selector */}
-              <div className="px-4 py-2">
-                <p className="text-xs text-gray-400 mb-1.5">{t("Language")}</p>
-                <select
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value as "en" | "it")}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-sm text-white cursor-pointer"
-                >
-                  <option value="en">English</option>
-                  <option value="it">Italiano</option>
-                </select>
+              <div className="px-4 py-2.5">
+                <p className="text-[10px] font-semibold text-[#6b7280] tracking-widest uppercase mb-2">
+                  {t("Language")}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Globe size={13} className="text-[#6b7280] shrink-0" aria-hidden="true" />
+                  <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value as "en" | "it")}
+                    // P1: aria-label on select
+                    aria-label={t("Select language")}
+                    className="
+                      flex-1 bg-[#111318] border border-[#252830]
+                      rounded-lg px-2 py-1.5 text-sm text-white
+                      cursor-pointer appearance-none
+                      focus:outline-none focus:ring-1 focus:ring-[#00FFA3]
+                    "
+                  >
+                    <option value="en">English</option>
+                    <option value="it">Italiano</option>
+                  </select>
+                </div>
               </div>
-              
-              <div className="border-t border-gray-700 my-1" />
+
+              <div className="border-t border-[#252830] my-1" />
 
               {/* Logout */}
+              {/* P1: role="menuitem", P8: destructive action visually separated */}
               <button
+                role="menuitem"
                 onClick={logout}
-                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors cursor-pointer"
+                className="
+                  w-full text-left px-4 py-2.5 text-sm
+                  text-red-400 hover:bg-[#252830] hover:text-red-300
+                  transition-colors duration-150 cursor-pointer
+                  flex items-center gap-2.5
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-inset
+                "
               >
+                <LogOut size={14} aria-hidden="true" />
                 {t("Logout")}
               </button>
-
             </div>
           )}
         </div>
       </div>
+
+      {/* P9: mobile bottom nav (visible only on small screens) */}
+      <nav
+        aria-label={t("Mobile navigation")}
+        className="
+          md:hidden flex items-center justify-around
+          border-t border-[#1a1d24] py-2 px-4
+        "
+      >
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href || pathname.startsWith(href + "/");
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={isActive ? "page" : undefined}
+              aria-label={t(label)}
+              className={`
+                flex flex-col items-center gap-1
+                // P2: 44×44 min touch target
+                min-w-[44px] min-h-[44px] justify-center
+                rounded-xl transition-colors duration-150
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3]
+                ${isActive ? "text-[#00FFA3]" : "text-[#6b7280] hover:text-white"}
+              `}
+            >
+              <Icon size={20} aria-hidden="true" />
+              <span className="text-[9px] font-medium">{t(label)}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </header>
   );
 }
