@@ -52,6 +52,11 @@ export default function RegisterPage() {
   const [nameTouched, setNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
 
+  const isValidEmail = (email: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const isEmailValid = !email || isValidEmail(email);
+
   const router = useRouter();
   const { t, lang, setLang } = useTranslation();
   // P7: respect prefers-reduced-motion
@@ -222,13 +227,13 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setEmailTouched(true)}
               autoComplete="email" required disabled={isLoading} aria-required="true"
-              aria-invalid={emailTouched && !email ? "true" : undefined}
+              aria-invalid={emailTouched && !isEmailValid ? "true" : undefined}
               className="block w-full px-4 py-3 text-sm text-white bg-[#111318] border border-[#252830] rounded-xl placeholder-[#363a44] transition-all focus:outline-none focus:ring-1 focus:ring-[#00FFA3] focus:border-[#00FFA3] disabled:opacity-40 disabled:cursor-not-allowed"
               placeholder={t("username@email.com")}
             />
-            {emailTouched && !email && (
+            {emailTouched && email && !isEmailValid && (
               <p className="text-[11px] text-red-400 mt-1" role="alert">
-                {t("Email is required")}
+                {t("Please enter a valid email address")}
               </p>
             )}
           </div>
