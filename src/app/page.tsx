@@ -61,7 +61,7 @@ const slides = [
 // ─────────────────────────────────────────────
 function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
   const [current, setCurrent] = useState(0);
-  const { lang } = useTranslation();
+  const { t, lang } = useTranslation();
 
   // P7: pause auto-advance when reduced motion is on
   useEffect(() => {
@@ -88,7 +88,7 @@ function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
           className="text-white font-bold italic text-center leading-tight tracking-tight"
           style={{ fontSize: "clamp(1.3rem, 2vw, 2rem)" }}
         >
-          {`"Because our goal is to make your goals easier."`}
+          {t("Because our goal is to make your goals easier.")}
         </p>
       </div>
 

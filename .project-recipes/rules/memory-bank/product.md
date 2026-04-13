@@ -1,44 +1,43 @@
-# Product Context: Next.js Starter Template
+# Product Context: FinApp Tracker
 
-## Why This Template Exists
+## Why This Project Exists
 
-Starting a new Next.js project involves boilerplate setup, configuration decisions, and establishing patterns. This template provides a clean, opinionated starting point that eliminates setup friction and establishes best practices from the start. It's optimized for AI-assisted development, where an AI can quickly extend the template based on user requirements.
+FinApp Tracker exists to help users manage personal finances with a simple, actionable web interface. It brings together income tracking, recurring and one-time expenses, and savings goals into a single app.
 
 ## Problems It Solves
 
-1. **Setup Time**: Eliminates boilerplate configuration (TypeScript, Tailwind, ESLint)
-2. **Decision Fatigue**: Pre-made choices for tooling and patterns
-3. **AI Context**: Memory bank provides persistent context for AI assistants
-4. **Extensibility**: Recipe system for adding common features
-5. **Consistency**: Standardized project structure and conventions
+1. **Unclear monthly finances**: Provides a dashboard showing income vs expenses
+2. **Forgotten recurring bills**: Tracks subscriptions, insurance, installments, and other repeating costs
+3. **Goal planning gaps**: Helps users save toward targets with progress and contribution history
+4. **Authentication needs**: Secures user data with sign-in and session handling
 
-## How It Should Work (User Flow)
+## User Flow
 
-1. User starts with this template
-2. User describes what they want to build to AI assistant
-3. AI adds pages, components, and features as needed
-4. AI uses recipes for common additions (database, auth)
-5. User previews changes via hot reload
-6. Iterate until satisfied
-7. Deploy
+1. User visits the app and logs in
+2. User enters monthly income data
+3. User adds recurring expenses and toggles active subscriptions
+4. User logs one-time expenses by category
+5. User creates savings goals and tracks contributions
+6. User reviews progress in the dashboard
+7. User can deploy the app to GitHub-hosted environments
 
-## Key User Experience Goals
+## User Experience Goals
 
-- **Zero to Feature Fast**: Get building immediately, no setup required
-- **AI-Friendly**: Memory bank and recipes make AI assistance effective
-- **Flexible Foundation**: Can become any type of application
-- **Best Practices Built-In**: TypeScript strict mode, ESLint, clean structure
+- **Simple onboarding**: easy login and clear navigation
+- **Fast data entry**: intuitive forms for income and expenses
+- **Helpful summary**: dashboard numbers and charts that explain financial health
+- **Goal focus**: visible savings targets and progress tracking
 
-## What This Template Provides
+## What This App Provides
 
-1. **Clean App Structure**: Single page ready for expansion
-2. **Type Safety**: Full TypeScript setup with strict mode
-3. **Modern Styling**: Tailwind CSS 4 ready to use
-4. **Code Quality**: ESLint configured
-5. **Extensibility**: Recipe system for common features
+1. **Authentication**: NextAuth credentials provider with Drizzle adapter
+2. **Database-backed storage**: Neon/Postgres via Drizzle ORM
+3. **Finance tracking**: income, recurring, one-time expenses, goals
+4. **Analytics**: Vercel Analytics and Speed Insights
+5. **Responsive UI**: built with Tailwind CSS and React
 
 ## Integration Points
 
-- **Database**: Use add-database recipe for Drizzle + SQLite
-- **Styling**: Tailwind CSS pre-configured
-- **AI Assistance**: Memory bank for context persistence
+- **Database**: `src/db/schema.ts`, `src/db/index.ts`, `drizzle.config.ts`
+- **Authentication**: `src/lib/auth.ts`, `src/app/api/auth/[...nextauth]/route.ts`
+- **API routes**: CRUD endpoints under `src/app/api`

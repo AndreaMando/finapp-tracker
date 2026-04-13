@@ -1,141 +1,158 @@
 # Recipe: Add Database
 
-Add SQLite database support with Drizzle ORM for data persistence.
+Add PostgreSQL database support with Drizzle ORM and Neon for data persistence.
 
 ## When to Use
 
-- User needs to store data (users, posts, comments, etc.)
-- Application requires authentication with user accounts
-- Any feature requiring persistent state
+- User needs persistent storage for auth, incomes, expenses, goals, or contributions
+- Application requires an authenticated backend with SQL queries
+- You want to deploy the app with a managed Postgres database
 
 ## Prerequisites
 
-- Base template already set up
-- Understanding of the data model needed
+- Base app already implemented
+- A Postgres database URL available via `.env.local`
+- Understanding of your data model and schema
 
 ## Environment
 
-Database credentials (`DB_URL`, `DB_TOKEN`) are automatically provided by the sandbox environment.
+Create a `.env.local` file with:
+
+```env
+POSTGRES_URL=postgresql://user:password@host:port/database
+```
 
 ## Setup Steps
 
 ### Step 1: Install Dependencies
 
 ```bash
-# use your preferred package manager; example with npm:
-npm install drizzle-orm sqlite3 drizzle-kit
-# or bun add drizzle-orm sqlite3 drizzle-kit
+npm install drizzle-orm drizzle-kit @neondatabase/serverless
 ```
-### Step 2: Create All Required Files
 
-⚠️ **Important**: Create ALL files before running generate. Setup fails if any are missing.
+### Step 2: Create the Database Files
+
+Existing repository structure already uses these files.
 
 #### `src/db/schema.ts` - Table definitions
 
 ```typescript
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  numeric,
+  boolean,
+  primaryKey,
+  integer,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import type { AdapterAccount } from "@auth/core/adapters";
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
+export const users = pgTable("users", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name"),
   email: text("email").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
+  password: text("password"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Add more tables as needed
+// Additional auth and financial tables are defined in this file.
 ```
 
 #### `src/db/index.ts` - Database client
 
 ```typescript
-// Example using Drizzle with better-sqlite3; adjust for your driver
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 
-export const db = drizzle("db.sqlite", { schema });
+const sql = neon(process.env.POSTGRES_URL!);
+
+// @ts-ignore
+export const db = drizzle(sql, { schema });
 ```
-#### `src/db/migrate.ts` - Migration script
+
+#### `drizzle.config.ts` - Drizzle configuration
 
 ```typescript
-// This file can simply call the CLI or your chosen migration tool
+import { defineConfig } from "drizzle-kit";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
+
+export default defineConfig({
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.POSTGRES_URL!,
+  },
+  verbose: true,
+});
+```
+
+#### `src/db/migrate.ts` - Migration wrapper
+
+```typescript
 import { execSync } from "child_process";
 
 export function migrateDb() {
   execSync("npm run db:migrate", { stdio: "inherit" });
 }
 
-// migrateDb(); // optionally execute on import
-```
-#### `drizzle.config.ts` - Drizzle configuration (project root)
-
-```typescript
-import { defineConfig } from "drizzle-kit";
-
-export default defineConfig({
-  schema: "./src/db/schema.ts",
-  out: "./src/db/migrations",
-  dialect: "sqlite",
-});
+// Uncomment to run migrations automatically when this module is imported.
+// migrateDb();
 ```
 
 ### Step 3: Add Package Scripts
 
-Add to `package.json`:
+Add or confirm these scripts in `package.json`:
 
 ```json
 {
   "scripts": {
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "bun run src/db/migrate.ts"
+    "db:migrate": "drizzle-kit migrate"
   }
 }
 ```
 
-### Step 4: Generate Migrations
+### Step 4: Generate and Apply Migrations
 
 ```bash
-bun db:generate
+npm run db:generate
+npm run db:migrate
 ```
 
 ### Step 5: Commit and Push
 
 ```bash
-bun typecheck && bun lint && git add -A && git commit -m "Add database support" && git push
+npm run typecheck && npm run lint && git add -A && git commit -m "Add database support" && git push
 ```
 
-Migrations can be executed with `npm run db:migrate` (or the equivalent for your package manager) whenever you need to apply schema changes.
-
-⚠️ **Run migrations with the CLI** rather than invoking internal scripts directly.
 ## Usage Examples
 
-Database operations only work in Server Components and Server Actions.
+Database operations run in server code only.
 
 ```typescript
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-// Select all users
-const allUsers = await db.select().from(users);
+const user = await db.select().from(users).where(eq(users.email, "john@example.com"));
 
-// Select by ID
-const user = await db.select().from(users).where(eq(users.id, 1));
-
-// Insert new user
-await db.insert(users).values({ name: "John", email: "john@example.com" });
-
-// Update user
-await db.update(users).set({ name: "Jane" }).where(eq(users.id, 1));
-
-// Delete user
-await db.delete(users).where(eq(users.id, 1));
+await db.insert(users).values({
+  id: crypto.randomUUID(),
+  email: "john@example.com",
+  password: "hashed-password",
+});
 ```
 
-## Documentation Notes
+## Notes
 
-Once the database integration is in place, update any project documentation to note:
-
-- The tables defined in `src/db/schema.ts`
-- New API routes or server actions that use the database
-- Dependencies added (`drizzle-orm`, drivers, migration tools)
-- Location of database files and migration folder
+- This project uses Neon/Postgres via `@neondatabase/serverless`.
+- The current repository does not require `sqlite3`, `better-sqlite3`, or `@types/sqlite3` for database access.
+- If you want to move to SQLite later, update `src/db/index.ts`, `drizzle.config.ts`, and the schema imports accordingly.

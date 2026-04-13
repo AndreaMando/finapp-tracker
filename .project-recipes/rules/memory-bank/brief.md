@@ -1,48 +1,48 @@
-# Project Brief: Next.js Starter Template
+# Project Brief: FinApp Tracker
 
 ## Purpose
 
-This is a minimal Next.js starter template designed for AI-assisted development. It provides a clean foundation that can be extended to build any type of web application through interaction with an AI assistant.
+FinApp Tracker is a personal finance web application for tracking income, recurring expenses, one-time expenses, and savings goals.
 
 ## Target Users
 
-- Developers wanting a clean Next.js starting point
-- Users building applications through AI-assisted coding
-- Teams needing a standardized, modern Next.js setup
+- Individuals who want to manage budgets and savings
+- Users who track recurring bills and monthly spending
+- People who want a simple finance dashboard with goal planning
 
 ## Core Use Case
 
-Users describe what they want to build to an AI assistant, which then expands this template by:
-
-1. Adding components and pages as needed
-2. Installing additional dependencies
-3. Setting up databases, authentication, etc. using recipes
-4. Customizing styling and branding
+Users sign in, enter income and expenses, and monitor progress toward savings goals across monthly periods.
 
 ## Key Requirements
 
 ### Must Have
 
-- Modern Next.js 16 setup with App Router
-- TypeScript for type safety
-- Tailwind CSS 4 for styling
-- ESLint for code quality
-- Clean, minimal starting structure
-- Bun as package manager
+- User authentication with email/password login
+- Persistent storage for users, transactions, and goals
+- Dashboard summarizing income vs expenses
+- Recurring expense management
+- One-time expense tracking
+- Savings goals and contribution history
+- Responsive UI with clean styling
 
 ### Nice to Have
 
-- Recipe system for common additions (database, auth)
-- Memory bank for AI context persistence
-- Clear development guidelines
+- Analytics integration
+- Performance monitoring
+- Clear developer documentation
+- GitHub-ready README
 
 ## Success Metrics
 
-- Clean, zero-error TypeScript setup
-- Passing lint and type checks
+- Functional login and data persistence
+- Accurate financial summaries and goal tracking
+- Clean, lint-free codebase
+- GitHub repository with clear documentation
 
 ## Constraints
 
-- Minimal dependencies by default
-- Framework: Next.js 16 + React 19 + Tailwind CSS 4
-- Package manager: Bun
+- Postgres database via Neon
+- Next.js 16 + React 19 + Tailwind CSS 4
+- TypeScript strict mode enabled
+- Minimal external dependencies beyond core app needs

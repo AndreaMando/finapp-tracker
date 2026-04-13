@@ -1,100 +1,65 @@
-# Active Context: Next.js Starter Template
+# Active Context: FinApp Tracker
 
 ## Current State
 
-**Template Status**: ✅ Ready for development
+**Project Status**: ✅ Functional personal finance app with authentication and database setup.
 
-The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. It's ready for AI-assisted expansion to build any type of application.
+FinApp Tracker uses Next.js 16, React 19, Tailwind CSS 4, NextAuth, and Drizzle ORM with Neon/Postgres.
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
-- [x] FinTrack personal finance app built on top of the template
+- [x] Personal finance dashboard and authenticated app shell
+- [x] Income, recurring expense, one-time expense, and savings goals flows
+- [x] NextAuth credentials login with Drizzle adapter
+- [x] Postgres database integration via Neon and Drizzle ORM
+- [x] App Router layout with nested `(authenticated)` routes
+- [x] Analytics via Vercel Analytics and Speed Insights
+- [x] Memory bank and recipe documentation in `.project-recipes`
 
 ## Current Structure
 
 | File/Directory | Purpose | Status |
 |----------------|---------|--------|
-| `src/app/page.tsx` | Dashboard with monthly summary, expense breakdown, goals overview | ✅ Ready |
-| `src/app/layout.tsx` | Root layout with sidebar navigation | ✅ Ready |
-| `src/app/globals.css` | Global styles | ✅ Ready |
-| `src/app/income/page.tsx` | Monthly income management (set/edit/delete per month) | ✅ Ready |
-| `src/app/recurring/page.tsx` | Recurring expenses (bills, subscriptions, insurance) with toggle | ✅ Ready |
-| `src/app/expenses/page.tsx` | One-time expenses per month, grouped by category | ✅ Ready |
-| `src/app/goals/page.tsx` | Savings goals with contributions, progress tracking, history | ✅ Ready |
-| `src/lib/store.ts` | localStorage data layer (income, recurring, one-time, goals, contributions) | ✅ Ready |
+| `src/app/page.tsx` | Login page and public landing experience | ✅ Ready |
+| `src/app/(authenticated)/layout.tsx` | Authenticated layout wrapper | ✅ Ready |
+| `src/app/(authenticated)/dashboard/page.tsx` | Dashboard summary page | ✅ Ready |
+| `src/app/(authenticated)/income/page.tsx` | Income tracking | ✅ Ready |
+| `src/app/(authenticated)/expenses/page.tsx` | One-time expense tracking | ✅ Ready |
+| `src/app/(authenticated)/recurring/page.tsx` | Recurring expense management | ✅ Ready |
+| `src/app/(authenticated)/goals/page.tsx` | Savings goals with contributions | ✅ Ready |
+| `src/db/schema.ts` | Drizzle Postgres schema, including auth and finance tables | ✅ Ready |
+| `src/db/index.ts` | Neon/Postgres Drizzle client | ✅ Ready |
+| `src/lib/auth.ts` | NextAuth configuration with credential provider | ✅ Ready |
 | `src/components/layout/Sidebar.tsx` | Navigation sidebar | ✅ Ready |
 | `src/components/ui/Button.tsx` | Reusable button component | ✅ Ready |
 | `src/components/ui/Modal.tsx` | Reusable modal component | ✅ Ready |
-| `.project-recipes/` | AI context & recipes | ✅ Ready |
+| `.project-recipes/` | AI recipe and memory bank docs | ✅ Ready |
 
 ## Current Focus
 
-FinTrack personal finance app is fully functional. Features implemented:
-- Monthly income tracking (per month, with notes)
-- Recurring expenses (bills, subscriptions, insurance) with enable/disable toggle
-- One-time expenses per month, categorized
-- Monthly dashboard with income vs expenses breakdown and savings calculation
-- Savings goals with target amount, deadline, color coding
-- Goal contributions (add money from monthly total to a goal)
-- Contribution history per goal with ability to remove contributions
-- All data persisted in browser localStorage (no backend needed)
+The project is ready for GitHub publication and documentation cleanup.
 
-## Quick Start Guide
+Key themes:
+- Clear root README for repository publishing
+- Accurate `.project-recipes` docs for the real stack
+- Database and auth configuration consistency
+- Removal of unused direct dependencies where appropriate
 
-### To add a new page:
+## Deployment Notes
 
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
-```
+- The app requires `POSTGRES_URL` in `.env.local` for database access.
+- Authentication uses NextAuth with an email/password credentials provider.
+- Static assets live in `public/`.
 
-### To add components:
+## GitHub Publishing Checklist
 
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
-
-### To add a database:
-
-Follow `.project-recipes/recipes/add-database.md`
-
-### To add API routes:
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.project-recipes/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
+- [x] Add a root `README.md`
+- [x] Confirm `package.json` scripts work
+- [ ] Remove unused direct dependencies if cleanup is desired
+- [x] Keep `.project-recipes` documentation aligned with repo structure
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
-| Initial | Template created with base setup |
+| 2026-04-13 | Updated `.project-recipes` to match FinApp Tracker and added GitHub documentation guidance |

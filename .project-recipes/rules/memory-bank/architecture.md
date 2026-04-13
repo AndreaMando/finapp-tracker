@@ -1,120 +1,90 @@
-# System Patterns: Next.js Starter Template
+# System Patterns: FinApp Tracker
 
 ## Architecture Overview
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx          # Root layout + metadata
-│   ├── page.tsx            # Home page
-│   ├── globals.css         # Tailwind imports + global styles
-│   └── favicon.ico         # Site icon
-└── (expand as needed)
-    ├── components/         # React components (add when needed)
-    ├── lib/                # Utilities and helpers (add when needed)
-    └── db/                 # Database files (add via recipe)
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── globals.css
+│   ├── (authenticated)/
+│   │   ├── layout.tsx
+│   │   ├── dashboard/page.tsx
+│   │   ├── income/page.tsx
+│   │   ├── expenses/page.tsx
+│   │   ├── recurring/page.tsx
+│   │   └── goals/page.tsx
+│   └── api/
+│       ├── auth/
+│       │   └── [...nextauth]/route.ts
+│       ├── income/route.ts
+│       ├── recurring/route.ts
+│       ├── one-time/route.ts
+│       ├── contributions/route.ts
+│       └── goals/route.ts
+├── components/
+│   ├── layout/
+│   │   └── Sidebar.tsx
+│   └── ui/
+│       ├── Button.tsx
+│       └── Modal.tsx
+├── db/
+│   ├── index.ts
+│   ├── schema.ts
+│   └── migrate.ts
+└── lib/
+    ├── auth.ts
+    └── store.ts
 ```
 
 ## Key Design Patterns
 
-### 1. App Router Pattern
+### 1. App Router with Authenticated Nesting
 
-Uses Next.js App Router with file-based routing:
-```
-src/app/
-├── page.tsx           # Route: /
-├── about/page.tsx     # Route: /about
-├── blog/
-│   ├── page.tsx       # Route: /blog
-│   └── [slug]/page.tsx # Route: /blog/:slug
-└── api/
-    └── route.ts       # API Route: /api
-```
+- Public login/landing content is delivered from `src/app/page.tsx`
+- Protected finance pages are grouped under `src/app/(authenticated)/`
+- Nested layout allows a single auth-aware shell with sidebar and main content
 
-### 2. Component Organization Pattern (When Expanding)
+### 2. Database Layer
 
-```
-src/components/
-├── ui/                # Reusable UI components (Button, Card, etc.)
-├── layout/            # Layout components (Header, Footer)
-├── sections/          # Page sections (Hero, Features, etc.)
-└── forms/             # Form components
-```
+- `src/db/schema.ts` defines auth and finance tables using `drizzle-orm/pg-core`
+- `src/db/index.ts` initializes the database client with `drizzle-orm/neon-http`
+- `drizzle.config.ts` configures migrations for Neon/Postgres
 
-### 3. Server Components by Default
+### 3. Authentication Pattern
 
-All components are Server Components unless marked with `"use client"`:
-```tsx
-// Server Component (default) - can fetch data, access DB
-export default function Page() {
-  return <div>Server rendered</div>;
-}
+- `src/lib/auth.ts` configures NextAuth with the Drizzle adapter
+- Credentials provider validates passwords via `bcryptjs`
+- User sessions are stored as JWTs
 
-// Client Component - for interactivity
-"use client";
-export default function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
-}
-```
+### 4. API Routes for CRUD
 
-### 4. Layout Pattern
+- Each resource has a dedicated route under `src/app/api/`
+- Server-side logic lives in API routes and server components only
+- Use Drizzle queries wrapped in `eq`, `and`, and `sql` as needed
 
-Layouts wrap pages and can be nested:
-```tsx
-// src/app/layout.tsx - Root layout
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
+### 5. UI Component Organization
 
-// src/app/dashboard/layout.tsx - Nested layout
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex">
-      <Sidebar />
-      <main>{children}</main>
-    </div>
-  );
-}
-```
+- Shared UI components live in `src/components/ui/`
+- Layout components live in `src/components/layout/`
+- Page-specific rendering stays inside `app/`
 
 ## Styling Conventions
 
-### Tailwind CSS Usage
-- Utility classes directly on elements
-- Component composition for repeated patterns
-- Responsive: `sm:`, `md:`, `lg:`, `xl:`
-
-### Common Patterns
-```tsx
-// Container
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-// Responsive grid
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-// Flexbox centering
-<div className="flex items-center justify-center">
-```
-
-## File Naming Conventions
-
-- Components: PascalCase (`Button.tsx`, `Header.tsx`)
-- Utilities: camelCase (`utils.ts`, `helpers.ts`)
-- Pages/Routes: lowercase (`page.tsx`, `layout.tsx`)
-- Directories: kebab-case (`api-routes/`) or lowercase (`components/`)
+- Use Tailwind utility classes for layout, spacing, and typography
+- Prefer responsive Tailwind classes (`sm:`, `md:`, `lg:`)
+- Keep button and form state accessible with focus rings and ARIA labels
 
 ## State Management
 
-For simple needs:
-- `useState` for local component state
-- `useContext` for shared state
-- Server Components for data fetching
+- Use server components for data-fetching pages
+- Use client components only where browser state or interactivity is required
+- Keep most business logic on the server side with Drizzle queries
 
-For complex needs (add when necessary):
-- Zustand for client state
-- React Query for server state
+## Naming Conventions
+
+- Components: PascalCase (`Sidebar.tsx`, `Button.tsx`)
+- Utility modules: camelCase (`auth.ts`, `store.ts`)
+- Pages/routes: lowercase `page.tsx` and `layout.tsx`
+- Database columns: snake_case by convention in schema definitions
