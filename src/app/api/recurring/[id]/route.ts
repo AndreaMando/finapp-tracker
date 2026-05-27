@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { recurringExpenses } from "@/db/schema";
+import { recurringExpenses, recurringExpenseAmounts } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
@@ -16,6 +16,21 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     if (body.amount !== undefined) updateData.amount = String(body.amount);
     if (body.active !== undefined) updateData.active = body.active;
     // Add other fields as needed
+
+    // if amount is changing and an applyFromMonth is provided, insert history
+    if (body.amount !== undefined && body.applyFromMonth) {
+      try {
+        await db.insert(recurringExpenseAmounts).values({
+          id: crypto.randomUUID(),
+          recurringId: params.id,
+          amount: String(body.amount),
+          effectiveMonth: body.applyFromMonth,
+          userId: session.user.id,
+        });
+      } catch (err) {
+        console.error("Failed to insert recurring amount history:", err);
+      }
+    }
 
     await db.update(recurringExpenses)
       .set(updateData)

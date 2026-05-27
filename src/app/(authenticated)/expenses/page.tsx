@@ -195,7 +195,8 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
   const { t, lang } = useTranslation();
   const locale = lang === "it" ? "it-IT" : "en-US";
   const today = new Date().toISOString().split("T")[0];
-  const monthKey = currentMonthKey();
+  // monthKey must come from the selected date so expenses are assigned
+  // to the month of execution, not the current month at time of entry.
   const [name, setName] = useState(existing?.name ?? "");
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
   const [category, setCategory] = useState(existing?.category ?? CATEGORIES[0]);
@@ -230,11 +231,13 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
     setIsSubmitting(true);
     const dateObject = new Date(date);
     if (existing) {
+      const monthKeyFromDate = `${dateObject.getFullYear()}-${String(dateObject.getMonth() + 1).padStart(2, "0")}`;
       await updateOneTimeExpense(existing.id, {
-        monthKey, name: name.trim(), amount: parseFloat(amount), category, date: dateObject,
+        monthKey: monthKeyFromDate, name: name.trim(), amount: parseFloat(amount), category, date: dateObject,
       });
     } else {
-      await addOneTimeExpense(monthKey, name.trim(), parseFloat(amount), category, dateObject);
+      const monthKeyFromDate = `${dateObject.getFullYear()}-${String(dateObject.getMonth() + 1).padStart(2, "0")}`;
+      await addOneTimeExpense(monthKeyFromDate, name.trim(), parseFloat(amount), category, dateObject);
     }
     setIsSubmitting(false);
     onSave();

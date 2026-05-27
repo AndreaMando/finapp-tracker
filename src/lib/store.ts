@@ -121,8 +121,9 @@ export async function deleteIncome(id: string): Promise<void> {
 
 // ─── Recurring Expenses ───────────────────────────────────────────────────────
 
-export async function getRecurringExpenses(): Promise<RecurringExpense[]> {
-  const data = await fetchJson<any[]>(`${API_BASE}/recurring`);
+export async function getRecurringExpenses(monthKey?: MonthKey): Promise<RecurringExpense[]> {
+  const qs = monthKey ? `?monthKey=${encodeURIComponent(monthKey)}` : "";
+  const data = await fetchJson<any[]>(`${API_BASE}/recurring${qs}`);
   return data.map(d => ({
     ...d,
     amount: Number(d.amount),
@@ -148,7 +149,7 @@ export async function addRecurringExpense(
 
 export async function updateRecurringExpense(
   id: string,
-  updates: Partial<Omit<RecurringExpense, "id" | "createdAt">>
+  updates: Partial<Omit<RecurringExpense, "id" | "createdAt">> & { applyFromMonth?: MonthKey }
 ): Promise<void> {
   await fetch(`${API_BASE}/recurring/${id}`, {
     method: "PUT",
@@ -162,7 +163,7 @@ export async function deleteRecurringExpense(id: string): Promise<void> {
 }
 
 export async function getTotalRecurring(monthKey: MonthKey = currentMonthKey()): Promise<number> {
-  const ex = await getRecurringExpenses();
+  const ex = await getRecurringExpenses(monthKey);
   return ex
     .filter((e) => e.active && e.startMonth <= monthKey)
     .reduce((sum, e) => sum + e.amount, 0);

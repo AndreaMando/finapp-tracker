@@ -69,6 +69,7 @@ export const verificationTokens = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
   incomes: many(incomes),
   recurringExpenses: many(recurringExpenses),
+  recurringExpenseAmounts: many(recurringExpenseAmounts),
   oneTimeExpenses: many(oneTimeExpenses),
   savingsGoals: many(savingsGoals),
 }));
@@ -111,6 +112,29 @@ export const recurringExpensesRelations = relations(
   ({ one }) => ({
     user: one(users, {
       fields: [recurringExpenses.userId],
+      references: [users.id],
+    }),
+  })
+);
+
+export const recurringExpenseAmounts = pgTable("recurring_expense_amounts", {
+  id: text("id").primaryKey(),
+  recurringId: text("recurring_id").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  effectiveMonth: text("effective_month").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  userId: text("user_id").notNull(),
+});
+
+export const recurringExpenseAmountsRelations = relations(
+  recurringExpenseAmounts,
+  ({ one }) => ({
+    recurring: one(recurringExpenses, {
+      fields: [recurringExpenseAmounts.recurringId],
+      references: [recurringExpenses.id],
+    }),
+    user: one(users, {
+      fields: [recurringExpenseAmounts.userId],
       references: [users.id],
     }),
   })

@@ -179,6 +179,25 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
   const [category, setCategory] = useState(existing?.category ?? CATEGORIES[0]);
   const [startMonth, setStartMonth] = useState(existing?.startMonth ?? todayKey);
+  const DEFAULT_APPLY_PREF_KEY = "recurringApplyFromDefault";
+  const [applyPref, setApplyPref] = useState<"current" | "next">(() => {
+    try {
+      return (localStorage.getItem(DEFAULT_APPLY_PREF_KEY) as "current" | "next") || "current";
+    } catch (e) {
+      return "current";
+    }
+  });
+  function computeApplyFrom(pref: "current" | "next") {
+    const now = new Date();
+    const month = pref === "next" ? new Date(now.getFullYear(), now.getMonth() + 1, 1) : new Date(now.getFullYear(), now.getMonth(), 1);
+    return `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
+  }
+  const [applyFrom, setApplyFrom] = useState<string>(existing ? computeApplyFrom(applyPref) : computeApplyFrom(applyPref));
+
+  // persist preference
+  useEffect(() => {
+    try { localStorage.setItem(DEFAULT_APPLY_PREF_KEY, applyPref); } catch (e) {}
+  }, [applyPref]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -204,9 +223,13 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
     }
     setIsSubmitting(true);
     if (existing) {
-      await updateRecurringExpense(existing.id, {
-        name: name.trim(), amount: parseFloat(amount), category, startMonth,
-      });
+      const parsed = parseFloat(amount);
+      const updates: any = { name: name.trim(), category, startMonth };
+      if (!Number.isNaN(parsed) && parsed !== existing.amount) {
+        updates.amount = parsed;
+        updates.applyFromMonth = applyFrom;
+      }
+      await updateRecurringExpense(existing.id, updates);
     } else {
       await addRecurringExpense(name.trim(), parseFloat(amount), category, startMonth);
     }
@@ -294,6 +317,42 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
         />
         {errors.startMonth && <p id="rec-start-error" role="alert" className="text-[11px] text-red-400 mt-1">{errors.startMonth}</p>}
       </div>
+
+        {/* Apply From */}
+        <div className="space-y-1.5">
+          <label htmlFor="rec-apply" className="block text-[11px] font-semibold text-[#9ca3af] tracking-widest uppercase">
+            {t("Apply From")}
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setApplyPref("current"); setApplyFrom(computeApplyFrom("current")); }}
+              aria-pressed={applyPref === "current"}
+              className={`flex-1 text-left px-4 py-3 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] ${
+                applyPref === "current"
+                  ? "bg-[#1a1d24] border border-[#1a1d24] text-white"
+                  : "bg-[#0d0d0d] border border-[#252830] text-[#e5e7eb] hover:bg-[#1a1d24] hover:text-white"
+              }`}
+            >
+              <div className="text-sm font-medium">{t("Current month")}</div>
+              <div className="text-xs text-[#9ca3af] mt-0.5">{formatMonthKey(computeApplyFrom("current"), locale)}</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setApplyPref("next"); setApplyFrom(computeApplyFrom("next")); }}
+              aria-pressed={applyPref === "next"}
+              className={`flex-1 text-left px-4 py-3 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] ${
+                applyPref === "next"
+                  ? "bg-[#1a1d24] border border-[#1a1d24] text-white"
+                  : "bg-[#0d0d0d] border border-[#252830] text-[#e5e7eb] hover:bg-[#1a1d24] hover:text-white"
+              }`}
+            >
+              <div className="text-sm font-medium">{t("Next month")}</div>
+              <div className="text-xs text-[#9ca3af] mt-0.5">{formatMonthKey(computeApplyFrom("next"), locale)}</div>
+            </button>
+          </div>
+        </div>
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
@@ -434,7 +493,8 @@ export default function RecurringPage() {
     let cancelled = false;
     
     async function load() {
-      const data = await getRecurringExpenses();
+      const key = currentMonthKey();
+      const data = await getRecurringExpenses(key);
       data.sort((a, b) => a.name.localeCompare(b.name));
       if (!cancelled) {
         setExpenses(data);
