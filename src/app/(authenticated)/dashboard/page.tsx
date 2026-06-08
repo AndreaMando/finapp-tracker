@@ -15,6 +15,7 @@ import {
   type MonthlySummary,
   type SavingsGoal,
 } from "@/lib/store";
+import RecurringApplyPanel from "@/components/RecurringApplyPanel";
 import { useTranslation } from "@/lib/i18n";
 
 // ─────────────────────────────────────────────
@@ -330,8 +331,7 @@ export default function DashboardPage() {
             <StatCard
               index={1} reduceMotion={reduceMotion}
               label={t("Total Expenses")}
-              value={formatCurrency(summary.totalExpenses)}
-              sub={`${t("Recurring")}: ${formatCurrency(summary.recurringExpenses)}`}
+              value={formatCurrency(summary.oneTimeExpenses)}
               valueColor="text-red-400"
               iconColor="#f87171" iconBg="#f8717120"
               icon={<TrendingDown size={16} />}
@@ -355,10 +355,23 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Middle row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
 
-            {/* Breakdown */}
+            {/* Top-left: Apply recurring panel (always visible) */}
+            <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5">
+              <h2 className="text-sm font-semibold text-white mb-4">{t("Apply Recurring Expenses")}</h2>
+              <RecurringApplyPanel
+                monthKey={monthKey}
+                onApplied={async () => {
+                  setLoading(true);
+                  const s = await getMonthlySummary(monthKey);
+                  setSummary(s);
+                  setLoading(false);
+                }}
+              />
+            </div>
+
+            {/* Top-right: Breakdown */}
             <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5">
               <h2 className="text-sm font-semibold text-white mb-4">{t("Expense Breakdown")}</h2>
               {summary.income === 0 && summary.totalExpenses === 0 ? (
@@ -381,70 +394,36 @@ export default function DashboardPage() {
                 </>
               )}
             </div>
-
-            {/* Quick actions */}
-            <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5">
-              <h2 className="text-sm font-semibold text-white mb-4">{t("Quick Actions")}</h2>
-              <nav aria-label={t("Quick actions")}>
-                <div className="divide-y divide-[#1a1d24]">
-                  {[
-                    { href: "/income",    label: t("Set income for this month"),   desc: t("Record your earnings")            },
-                    { href: "/recurring", label: t("Manage recurring expenses"),   desc: t("Bills, subscriptions, insurance") },
-                    { href: "/expenses",  label: t("Add an expense"),              desc: t("Dinners, shopping, etc.")         },
-                    { href: "/goals",     label: t("Contribute to a goal"),        desc: t("Track your savings targets")      },
-                  ].map(({ href, label, desc }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      // P2: active scale feedback
-                      className="
-                        flex items-center justify-between py-3
-                        -mx-2 px-2 rounded-xl group
-                        transition-colors duration-150
-                        hover:bg-[#1a1d24]
-                        active:scale-[0.98]
-                        focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3]
-                      "
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-[#e5e7eb] group-hover:text-white transition-colors">{label}</p>
-                        <p className="text-xs text-[#6b7280] mt-0.5">{desc}</p>
-                      </div>
-                      <ArrowRight
-                        size={15}
-                        className="text-[#374151] group-hover:text-[#00FFA3] transition-colors shrink-0 ml-3"
-                        aria-hidden="true"
-                      />
-                    </Link>
-                  ))}
-                </div>
-              </nav>
-            </div>
+            
           </div>
 
-          {/* Goals overview */}
-          {goals.length > 0 && (
-            <section aria-labelledby="goals-heading">
-              <div className="flex items-center justify-between mb-4">
-                <h2 id="goals-heading" className="text-sm font-semibold text-white">
-                  {t("Savings Goals")}
-                </h2>
-                <Link
-                  href="/goals"
-                  className="text-xs text-[#00FFA3] hover:text-[#00ffb3] flex items-center gap-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] rounded"
-                >
-                  {t("View all")} <ArrowRight size={13} aria-hidden="true" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {goals.slice(0, 3).map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} reduceMotion={reduceMotion} />
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Bottom-right: Goals overview */}
+          <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5">
+            {goals.length > 0 && (
+              <section aria-labelledby="goals-heading">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 id="goals-heading" className="text-sm font-semibold text-white">
+                    {t("Savings Goals")}
+                  </h2>
+                  <Link
+                    href="/goals"
+                    className="text-xs text-[#00FFA3] hover:text-[#00ffb3] flex items-center gap-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] rounded"
+                  >
+                    {t("View all")} <ArrowRight size={13} aria-hidden="true" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {goals.slice(0, 3).map((goal) => (
+                    <GoalCard key={goal.id} goal={goal} reduceMotion={reduceMotion} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+          
         </>
       ) : null}
+      {/* Recurring apply is now embedded in the dashboard grid */}
     </div>
   );
 }

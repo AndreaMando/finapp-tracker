@@ -101,6 +101,7 @@ export const recurringExpenses = pgTable("recurring_expenses", {
   category: text("category").notNull(),
   active: boolean("active").notNull(),
   startMonth: text("start_month").notNull(),
+  endMonth: text("end_month"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: text("user_id")
     .notNull()
@@ -147,6 +148,7 @@ export const oneTimeExpenses = pgTable("one_time_expenses", {
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   category: text("category").notNull(),
   date: timestamp("date").notNull(),
+  sourceRecurringId: text("source_recurring_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: text("user_id")
     .notNull()

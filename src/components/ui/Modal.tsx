@@ -7,9 +7,10 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  containerClassName?: string;
 }
 
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, children, containerClassName }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,12 +29,13 @@ export function Modal({ title, onClose, children }: ModalProps) {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="bg-[#0d0d0d] rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border border-[#0d0d0d]">
+      <div className={`bg-[#0d0d0d] rounded-2xl shadow-2xl w-full mx-auto ${containerClassName ?? "max-w-lg"} overflow-hidden`}>
+        <div className="flex items-center justify-between px-6 py-4">
           <h2 className="text-xl font-semibold text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-[#9ca3af] hover:text-white hover:bg-[#111318] transition-colors cursor-pointer"
+            aria-label="Close"
           >
             <X size={20} />
           </button>

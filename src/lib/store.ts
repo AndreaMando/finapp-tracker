@@ -19,6 +19,7 @@ export interface RecurringExpense {
   category: string;
   active: boolean;
   startMonth: MonthKey;
+  endMonth?: MonthKey | null;
   createdAt: Date;
 }
 
@@ -136,12 +137,13 @@ export async function addRecurringExpense(
   name: string,
   amount: number,
   category: string,
-  startMonth: MonthKey
+  startMonth: MonthKey,
+  endMonth?: MonthKey | null
 ): Promise<RecurringExpense> {
   const res = await fetch(`${API_BASE}/recurring`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, amount, category, startMonth }),
+    body: JSON.stringify({ name, amount, category, startMonth, endMonth }),
   });
   const d = await res.json();
   return { ...d, amount: Number(d.amount), active: Boolean(d.active), createdAt: new Date(d.createdAt) };
@@ -158,6 +160,20 @@ export async function updateRecurringExpense(
   });
 }
 
+export async function previewRecurringForMonth(monthKey: MonthKey) {
+  const data = await fetchJson<any[]>(`${API_BASE}/recurring/preview?monthKey=${encodeURIComponent(monthKey)}`);
+  return data.map(d => ({ ...d, amount: Number(d.amount) }));
+}
+
+export async function applyRecurringSelections(monthKey: MonthKey, items: Array<{ id: string; amount?: number }>) {
+  const res = await fetch(`${API_BASE}/recurring/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ monthKey, items }),
+  });
+  return res.json();
+}
+
 export async function deleteRecurringExpense(id: string): Promise<void> {
   await fetch(`${API_BASE}/recurring/${id}`, { method: "DELETE" });
 }
@@ -165,7 +181,7 @@ export async function deleteRecurringExpense(id: string): Promise<void> {
 export async function getTotalRecurring(monthKey: MonthKey = currentMonthKey()): Promise<number> {
   const ex = await getRecurringExpenses(monthKey);
   return ex
-    .filter((e) => e.active && e.startMonth <= monthKey)
+    .filter((e) => e.active && e.startMonth <= monthKey && (!e.endMonth || e.endMonth >= monthKey))
     .reduce((sum, e) => sum + e.amount, 0);
 }
 
@@ -345,7 +361,7 @@ export async function getMonthlySummary(monthKey: MonthKey): Promise<MonthlySumm
     .reduce((sum, c) => sum + c.amount, 0);
   
   const totalExpenses = recurringExpenses + oneTimeExpenses;
-  const savings = income - totalExpenses;
+  const savings = income - oneTimeExpenses;
   
   return {
     monthKey,

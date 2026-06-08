@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, amount, category, startMonth } = body;
+    const { name, amount, category, startMonth, endMonth } = body;
 
     const inserted = await db.insert(recurringExpenses).values({
       id: crypto.randomUUID(),
@@ -65,6 +65,7 @@ export async function POST(req: Request) {
       category,
       active: true,
       startMonth,
+      endMonth: endMonth ?? null,
     }).returning();
 
     // create initial amount history for this recurring expense

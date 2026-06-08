@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, ShoppingBag, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, ShoppingBag, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw } from "lucide-react";
 import {
   currentMonthKey,
   formatMonthKey,
@@ -14,6 +14,7 @@ import {
   type OneTimeExpense,
 } from "@/lib/store";
 import { Modal } from "@/components/ui/Modal";
+import RecurringApplyModal from "@/components/RecurringApplyModal";
 import { useTranslation } from "@/lib/i18n";
 
 // ─────────────────────────────────────────────
@@ -21,19 +22,28 @@ import { useTranslation } from "@/lib/i18n";
 // ─────────────────────────────────────────────
 const CATEGORIES = [
   "Food & Dining", "Shopping", "Entertainment", "Travel",
-  "Health", "Personal Care", "Gifts", "Home", "Other",
+  "Health", "Personal Care", "Gifts", "Home", "Housing",
+  "Utilities", "Insurance", "Subscriptions", "Transport",
+  "Financing", "Mortage", "Other",
 ];
 
 // Dark-theme category colors
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  "Food & Dining":  { bg: "#fb923c20", text: "#fb923c" },
-  Shopping:         { bg: "#f472b620", text: "#f472b6" },
-  Entertainment:    { bg: "#a78bfa20", text: "#a78bfa" },
-  Travel:           { bg: "#60a5fa20", text: "#60a5fa" },
-  Health:           { bg: "#4ade8020", text: "#4ade80" },
-  "Personal Care":  { bg: "#2dd4bf20", text: "#2dd4bf" },
-  Gifts:            { bg: "#f8717120", text: "#f87171" },
-  Home:             { bg: "#fbbf2420", text: "#fbbf24" },
+  "Food & Dining":  { bg: "#ef444420", text: "#ef4444" },
+  Shopping:         { bg: "#f9731620", text: "#f97316" },
+  Entertainment:    { bg: "#eab30820", text: "#eab308" },
+  Travel:           { bg: "#22c55e20", text: "#22c55e" },
+  Health:           { bg: "#14b8a620", text: "#14b8a6" },
+  "Personal Care":  { bg: "#3b82f620", text: "#3b82f6" },
+  Gifts:            { bg: "#6366f120", text: "#6366f1" },
+  Home:             { bg: "#a855f720", text: "#a855f7" },
+  Housing:          { bg: "#ec489920", text: "#ec4899" },
+  Utilities:        { bg: "#f43f5e20", text: "#f43f5e" },
+  Insurance:        { bg: "#06b6d420", text: "#06b6d4" },
+  Subscriptions:    { bg: "#84cc1620", text: "#84cc16" },
+  Transport:        { bg: "#0ea5e920", text: "#0ea5e9" },
+  Financing:        { bg: "#f59e0b20", text: "#f59e0b" },
+  Mortage:          { bg: "#10b98120", text: "#10b981" },
   Other:            { bg: "#9ca3af20", text: "#9ca3af" },
 };
 
@@ -373,6 +383,7 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<OneTimeExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [editing, setEditing] = useState<OneTimeExpense | undefined>();
   const [refresh, setRefresh] = useState(0);
   const [viewMode, setViewMode] = useState<"category" | "date">("category");
@@ -429,14 +440,23 @@ export default function ExpensesPage() {
           <p className="text-sm text-[#9ca3af] mt-0.5">{t("One-time and variable spending")}</p>
         </div>
         {/* P2: min 44px touch target */}
-        <button
-          onClick={() => { setEditing(undefined); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#00FFA3] hover:bg-[#00ffb3] active:scale-[0.98] text-[#0d0d0d] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"
-          aria-label={t("Add Expense")}
-        >
-          <Plus size={16} aria-hidden="true" />
-          {t("Add Expense")}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowRecurringModal(true)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 hover:bg-[#1a1d24] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer`}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            {t("Apply Recurring Expenses")}
+          </button>
+          <button
+            onClick={() => { setEditing(undefined); setShowModal(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#00FFA3] hover:bg-[#00ffb3] active:scale-[0.98] text-[#0d0d0d] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"
+            aria-label={t("Add Expense")}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {t("Add Expense")}
+          </button>
+        </div>
       </div>
 
       {/* Month selector */}
@@ -638,6 +658,14 @@ export default function ExpensesPage() {
             onClose={closeModal}
           />
         </Modal>
+      )}
+
+      {showRecurringModal && (
+        <RecurringApplyModal
+          monthKey={monthKey}
+          onClose={() => { setShowRecurringModal(false); setRefresh((r) => r + 1); }}
+          onApplied={() => setRefresh((r) => r + 1)}
+        />
       )}
     </div>
   );

@@ -15,6 +15,8 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     if (body.name !== undefined) updateData.name = body.name;
     if (body.amount !== undefined) updateData.amount = String(body.amount);
     if (body.active !== undefined) updateData.active = body.active;
+    if (body.endMonth !== undefined) updateData.endMonth = body.endMonth;
+    // autoApply removed: no-op
     // Add other fields as needed
 
     // if amount is changing and an applyFromMonth is provided, insert history
