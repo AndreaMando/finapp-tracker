@@ -296,18 +296,23 @@ const I18nContext = createContext<I18nContextValue>({
   t: (k) => k,
 });
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
+export function I18nProvider({ children, initialLang }: { children: React.ReactNode; initialLang?: Lang }) {
+  const [lang, setLangState] = useState<Lang>(initialLang ?? DEFAULT_LANG);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem(STORAGE_KEY); // string | null
     if (stored === "en" || stored === "it") {
-      // type narrowed to "en" | "it" which matches Lang
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLangState(stored);
+      // If the server didn't provide an initialLang, prefer localStorage value
+      if (!initialLang) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLangState(stored);
+      }
+    } else if (initialLang) {
+      // ensure localStorage matches the server-provided initialLang
+      localStorage.setItem(STORAGE_KEY, initialLang);
     }
-  }, []);
+  }, [initialLang]);
 
   const setLang = (l: Lang) => {
     setLangState(l);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { I18nProvider } from "@/lib/i18n";
+import { cookies } from 'next/headers';
 import AuthProvider from "./AuthProvider";
 import "./globals.css";
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -10,12 +11,14 @@ export const metadata: Metadata = {
   description: "Your personal finance tracker",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore: any = await cookies();
+  const langCookie = (cookieStore && typeof cookieStore.get === "function") ? cookieStore.get('vaulty_language')?.value as ("en" | "it") | undefined : undefined;
   return (
     <html lang="en">
       <body>
         <AuthProvider>
-          <I18nProvider>
+          <I18nProvider initialLang={langCookie}>
             {children}
             <SpeedInsights />
             <Analytics />

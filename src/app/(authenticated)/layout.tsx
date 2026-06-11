@@ -3,6 +3,7 @@ import "@/app/globals.css";
 //import { Sidebar } from "@/app/(authenticated)/components/layout/Sidebar";      // old sidebar, now replaced by a top navbar
 import { Navbar } from "@/app/(authenticated)/components/layout/Sidebar";
 import { I18nProvider } from "@/lib/i18n";
+import { cookies } from 'next/headers';
 import AuthProvider from "../AuthProvider";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
@@ -12,16 +13,18 @@ export const metadata: Metadata = {
   description: "Your personal finance tracker",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore: any = await cookies();
+  const langCookie = (cookieStore && typeof cookieStore.get === "function") ? cookieStore.get('vaulty_language')?.value as ("en" | "it") | undefined : undefined;
   return (
     <html lang="en">
       <body className="bg-[#0d0d0d] text-[#9ca3af] antialiased">
         <AuthProvider>
-          <I18nProvider>
+          <I18nProvider initialLang={langCookie}>
             <div className="w64 min-h-screen">
               <Navbar />
               {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}

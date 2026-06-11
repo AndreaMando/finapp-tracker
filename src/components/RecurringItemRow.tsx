@@ -12,98 +12,121 @@ interface Props {
   onAmountChange: (value: string) => void;
 }
 
+function CustomCheckbox({
+  checked,
+  applied,
+  label,
+  onToggle,
+}: {
+  checked: boolean;
+  applied: boolean;
+  label: string;
+  onToggle: () => void;
+}) {
+  const boxStyle: React.CSSProperties = {
+    width: 15,
+    height: 15,
+    borderRadius: 6,
+    border: `2px solid ${applied ? "#374151" : checked ? "#00FFA3" : "transparent"}`,
+    backgroundColor: applied ? "#252830" : checked ? "#00FFA3" : "#252830",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    transition: "all 150ms",
+    cursor: applied ? "" : "pointer",
+    outline: "none",
+  };
+ 
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={applied ? true : checked}
+      aria-label={label}
+      disabled={applied}
+      onClick={onToggle}
+      style={boxStyle}
+      onMouseEnter={(e) => {
+        if (!applied && !checked) {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#00FFA3";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!applied && !checked) {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#374151";
+        }
+      }}
+      onFocus={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 0 2px #0d0d0d, 0 0 0 4px #00FFA3";
+      }}
+      onBlur={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+      }}
+    >
+      {(checked || applied) && (
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+          <path
+            d="M2 5.5L4.5 8L9 3"
+            stroke={applied ? "#6b7280" : checked ? "#0d0d0d" : ""}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export function RecurringItemRow({ item, checked, onToggle, onAmountChange }: Props) {
   const { t } = useTranslation();
   const style = getCategoryStyle(item.category);
-  const checkboxId = `checkbox-${item.id}`;
 
+  const rowStyle: React.CSSProperties = {
+    border: `1px solid ${
+      item.isApplied ? "#1a1d24" : checked ? "#00FFA330" : "#1a1d24"
+    }`,
+    backgroundColor: item.isApplied ? "#0d0d0d" : checked ? "#00FFA308" : "#111318",
+    opacity: item.isApplied ? 0.5 : 1,
+    borderRadius: 12,
+    padding: "14px 16px",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    transition: "all 150ms",
+  };
+ 
   return (
-    <div
-      className={`
-        border rounded-xl px-4 py-3.5 flex items-center gap-3
-        transition-all duration-150
-        ${item.isApplied
-          ? "bg-[#0d0d0d] border-[#1a1d24] opacity-50"
-          : checked
-          ? "bg-[#00FFA308] border-[#00FFA330]"
-          : "bg-[#111318] border-[#1a1d24] hover:border-[#252830]"
+    <div style={rowStyle}>
+      <CustomCheckbox
+        checked={checked}
+        applied={item.isApplied}
+        label={
+          item.isApplied
+            ? `${item.name} — ${t("Applied")}`
+            : `${checked ? t("Deselect") : t("Select")} ${item.name}`
         }
-      `}
-    >
-      {/*
-        Correct peer technique: input and label must be direct siblings in the same flex container. 
-        The peer applies only to the immediately following sibling with + or ~ in CSS.
-        Structure: <div> → <input peer /> + <label peer-checked:.../>
-      */}
-      <div className="relative shrink-0 flex items-center justify-center w-5 h-5">
-        {/* Native invisible input - manages the native browser state */}
-        <input
-          id={checkboxId}
-          type="checkbox"
-          checked={checked}
-          onChange={() => { if (!item.isApplied) onToggle(); }}
-          disabled={item.isApplied}
-          aria-label={
-            item.isApplied
-              ? `${item.name} — ${t("Applied")}`
-              : `${checked ? t("Deselect") : t("Select")} ${item.name}`
-          }
-          className="
-            peer
-            absolute inset-10
-            opacity-0 m-0
-            cursor-pointer disabled:cursor-not-allowed
-            z-10
-          "
-        />
-        {/*
-          Visible label — direct sibling of the input thanks to both being direct children of the same div.
-          peer-checked: works because input[peer] + label is a CSS sibling.
-        */}
-        <div
-          aria-hidden="true"
-          className={`
-            absolute inset-10 rounded-md border-2
-            flex items-center justify-center
-            transition-all duration-150
-            peer-focus-visible:ring-2 peer-focus-visible:ring-[#00FFA3]
-            peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#111318]
-            ${item.isApplied
-              ? "bg-[#252830] border-[#252830]"
-              : checked
-              ? "bg-[#00FFA3] border-[#00FFA3]"
-              : !checked
-              ? "bg-[#252830] border-transparent"
-              : "bg-transparent border-[#374151]"
-            }
-          `}
-        >
-          {(!checked || checked || item.isApplied) && (
-            <svg width="15" height="15" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-              <path
-                d="M2 5.5L4.5 8L9 3"
-                stroke={item.isApplied ? "#6b7280" : checked ? "#0d0d0d" : ""}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </div>
-      </div>
+        onToggle={onToggle}
+      />
 
       {/* Name + Category */}
-      <div className="min-w-0 flex-1 ml-2">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className={`font-medium text-sm truncate ${
-              item.isApplied ? "text-[#6b7280] line-through" : "text-[#e5e7eb]"
-            }`}
+            className="font-medium text-sm truncate"
+            style={{
+              color: item.isApplied ? "#6b7280" : "#e5e7eb",
+              textDecoration: item.isApplied ? "line-through" : "none",
+            }}
           >
             {item.name}
           </span>
           {item.isApplied && (
-            <span className="shrink-0 text-[12px] px-2 py-0.5 rounded-full bg-[#00FFA315] text-[#00FFA3] font-semibold">
+            <span
+              className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold"
+              style={{ backgroundColor: "#00FFA315", color: "#00FFA3" }}
+            >
               {t("Applied")}
             </span>
           )}
@@ -130,16 +153,7 @@ export function RecurringItemRow({ item, checked, onToggle, onAmountChange }: Pr
           value={String(item.amount)}
           onChange={(e) => onAmountChange(e.target.value)}
           disabled={item.isApplied}
-          className="
-            w-20 px-3 py-2 rounded-lg text-sm text-left
-            bg-[#0d0d0d] text-white border border-[#252830]
-            focus:outline-none focus:ring-1 focus:ring-[#00FFA3] focus:border-[#00FFA3]
-            disabled:opacity-40 disabled:cursor-not-allowed
-            tabular-nums
-            [&::-webkit-outer-spin-button]:appearance-none
-            [&::-webkit-inner-spin-button]:appearance-none
-            [appearance:none]
-          "
+          className="w-20 px-3 py-2 rounded-lg text-sm text-left bg-[#0d0d0d] text-white border border-[#252830] focus:outline-none focus:ring-1 focus:ring-[#00FFA3] focus:border-[#00FFA3] disabled:opacity-40 disabled:cursor-not-allowed tabular-nums [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:none]"
         />
       </div>
     </div>

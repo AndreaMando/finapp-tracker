@@ -85,6 +85,13 @@ export function formatDate(iso: string | Date, locale: string = "en-US"): string
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      if (typeof window !== "undefined") {
+        // Redirect unauthenticated users to the login page
+        window.location.href = "/";
+      }
+      throw new Error("API Error: Unauthorized");
+    }
     throw new Error(`API Error: ${res.statusText}`);
   }
   return res.json();
