@@ -16,7 +16,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const langCookie = (cookieStore && typeof cookieStore.get === "function") ? cookieStore.get('vaulty_language')?.value as ("en" | "it") | undefined : undefined;
   return (
     <html lang="en">
-      <body>
+      <body className="bg-[#0d0d0d] text-[#9ca3af] antialiased">
         <AuthProvider>
           <I18nProvider initialLang={langCookie}>
             {children}

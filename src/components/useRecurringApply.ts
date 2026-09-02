@@ -20,7 +20,7 @@ export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Transport:     { bg: "#fb923c20", text: "#fb923c" },
   Health:        { bg: "#4ade8020", text: "#4ade80" },
   Financing:     { bg: "#a3e63520", text: "#a3e635" },
-  Mortage:       { bg: "#818cf820", text: "#818cf8" },
+  Mortgage:      { bg: "#818cf820", text: "#818cf8" },
   Other:         { bg: "#9ca3af20", text: "#9ca3af" },
 };
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -15,7 +16,6 @@ import {
   Globe,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import Cookies from "js-cookie";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard",         icon: LayoutDashboard },
@@ -25,9 +25,12 @@ const navItems = [
   { href: "/goals",     label: "Savings Goals",      icon: Target          },
 ];
 
+// The session is a NextAuth JWT cookie, not a hand-rolled "auth_token" one —
+// removing a cookie that was never set left the real session alive, so
+// clicking "Logout" didn't actually log anyone out. signOut() clears the
+// real session and redirects.
 const logout = () => {
-  Cookies.remove("auth_token");
-  window.location.href = "../../";
+  signOut({ callbackUrl: "/" });
 };
 
 export function Navbar() {
@@ -199,12 +202,20 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* P9: mobile bottom nav (visible only on small screens) */}
+      {/* P9: mobile bottom nav (visible only on small screens).
+          Fixed to the viewport bottom like a real app tab bar — it previously
+          sat inline right below the top bar and scrolled away with the page,
+          so it wasn't reachable without scrolling back up. safe-area padding
+          keeps it clear of the home indicator on notched iPhones; the
+          (authenticated) layout adds matching bottom padding to <main> so
+          this bar never covers the last bit of page content. */}
       <nav
         aria-label={t("Mobile navigation")}
         className="
           md:hidden flex items-center justify-around
-          border-t border-[#1a1d24] py-2 px-4
+          fixed inset-x-0 bottom-0 z-40
+          bg-[#111318] border-t border-[#1a1d24] py-2 px-4
+          pb-[calc(0.5rem+env(safe-area-inset-bottom))]
         "
       >
         {navItems.map(({ href, label, icon: Icon }) => {

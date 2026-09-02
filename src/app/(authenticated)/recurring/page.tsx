@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, RefreshCw, AlertTriangle, Archive, RotateCw } from "lucide-react";
+import { useReducedMotion, AnimatePresence } from "framer-motion";
+import { Plus, Pencil, Trash2, RefreshCw, Archive, RotateCw } from "lucide-react";
 import {
   getRecurringExpenses,
   addRecurringExpense,
@@ -13,6 +13,8 @@ import {
   type RecurringExpense,
 } from "@/lib/store";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import RecurringApplyModal from "@/components/RecurringApplyModal";
 import { useTranslation } from "@/lib/i18n";
 
@@ -21,7 +23,7 @@ import { useTranslation } from "@/lib/i18n";
 // ─────────────────────────────────────────────
 const CATEGORIES = [
   "Housing", "Utilities", "Insurance", "Subscriptions",
-  "Transport", "Health", "Financing", "Mortage", "Other",
+  "Transport", "Health", "Financing", "Mortgage", "Other",
 ];
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
@@ -31,7 +33,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Subscriptions:    { bg: "#84cc1620", text: "#84cc16" },
   Transport:        { bg: "#0ea5e920", text: "#0ea5e9" },
   Financing:        { bg: "#f59e0b20", text: "#f59e0b" },
-  Mortage:          { bg: "#10b98120", text: "#10b981" },
+  Mortgage:         { bg: "#10b98120", text: "#10b981" },
   Health:           { bg: "#f9731620", text: "#f97316" },
   Other:            { bg: "#9ca3af20", text: "#9ca3af" },
 };
@@ -80,89 +82,6 @@ function RecurringSkeleton() {
   );
 }
 
-// ─────────────────────────────────────────────
-// Accessible confirm dialog
-// ─────────────────────────────────────────────
-interface ConfirmDialogProps {
-  type: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  reduceMotion: boolean;
-}
-
-function ConfirmDialog({ type, message, onConfirm, onCancel, reduceMotion }: ConfirmDialogProps) {
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const { t } = useTranslation();
-
-  // P1: focus trap — focus cancel button on open
-  useEffect(() => {
-    cancelRef.current?.focus();
-  }, []);
-
-  // P1: close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onCancel]);
-
-  return (
-    // P1: role="dialog" with aria-modal
-    <div
-      className="fixed inset-0 z-[200] flex items-center justify-center"
-      role="dialog" 
-      aria-modal="true"
-      aria-labelledby="confirm-title"
-      aria-describedby="confirm-desc"
-    >
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60" 
-        onClick={onCancel} 
-        aria-hidden="true" 
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-        transition={{ duration: reduceMotion ? 0 : 0.15, ease: "easeOut" as const }}
-        className="relative z-10 bg-[#1a1d24] border border-[#252830] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
-      >
-        <div className="flex items-start gap-4 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-            <AlertTriangle size={18} className="text-red-400" aria-hidden="true" />
-          </div>
-          <div>
-            <p id="confirm-title" className="text-sm font-semibold text-white">
-              {t(`Confirm ${type}`)}
-            </p>
-            <p id="confirm-desc" className="text-xs text-[#9ca3af] mt-1 leading-relaxed">
-              {message}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {/* P8: destructive action is visually distinct and NOT the default focus */}
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-          >
-            {type === "Concluding" ? t("Conclude") : t("Delete")}
-          </button>
-          {/* P1: cancel is default focus */}
-          <button
-            ref={cancelRef}
-            onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#252830] text-white hover:bg-[#2e3340] active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3]"
-          >
-            {t("Cancel")}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────
 // Expense form (inside modal)
@@ -507,6 +426,7 @@ export default function RecurringPage() {
   const [refresh, setRefresh] = useState(0);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [concludeCandidate, setConcludeCandidate] = useState<RecurringExpense | null>(null);
+  const [actionError, setActionError] = useState("");
 
   // P3: cancel flag
   useEffect(() => {
@@ -526,25 +446,37 @@ export default function RecurringPage() {
   }, [refresh]);
 
   async function handleDelete(id: string) {
-    await deleteRecurringExpense(id);
-    setConfirmId(null);
-    setRefresh((r) => r + 1);
+    try {
+      await deleteRecurringExpense(id);
+      setConfirmId(null);
+      setRefresh((r) => r + 1);
+    } catch (err) {
+      setConfirmId(null);
+      setActionError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+    }
   }
-
-  
 
   async function handleConclude(expense: RecurringExpense) {
     // mark as concluded: set endMonth to previous month and deactivate
-    const end = previousMonthKey();
-    await updateRecurringExpense(expense.id, { endMonth: end, active: false });
-    setConcludeCandidate(null);
-    setRefresh((r) => r + 1);
+    try {
+      const end = previousMonthKey();
+      await updateRecurringExpense(expense.id, { endMonth: end, active: false });
+      setConcludeCandidate(null);
+      setRefresh((r) => r + 1);
+    } catch (err) {
+      setConcludeCandidate(null);
+      setActionError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+    }
   }
 
   async function handleRestore(expense: RecurringExpense) {
     // reopen a concluded expense: clear endMonth and keep active state true
-    await updateRecurringExpense(expense.id, { endMonth: null, active: true });
-    setRefresh((r) => r + 1);
+    try {
+      await updateRecurringExpense(expense.id, { endMonth: null, active: true });
+      setRefresh((r) => r + 1);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+    }
   }
 
   function openEdit(expense: RecurringExpense) {
@@ -559,10 +491,16 @@ export default function RecurringPage() {
 
   const currentKey = currentMonthKey();
   const [monthKey] = useState(currentMonthKey());
-  const activeExpenses   = expenses.filter((e) =>  e.active && e.startMonth <= currentKey);
-  // const pausedExpenses   = expenses.filter((e) => !e.active && e.startMonth <= currentKey);    // paused state removed
+  // Active/concluded partition on `startMonth <= currentKey` first, then on
+  // active/endMonth, so a given expense can only land in one section even
+  // if `active` and `endMonth` ever go out of sync with each other.
   const upcomingExpenses = expenses.filter((e) => e.startMonth > currentKey);
-  const concludedExpenses = expenses.filter((e) => e.endMonth && e.endMonth < currentKey);
+  const concludedExpenses = expenses.filter(
+    (e) => e.startMonth <= currentKey && (!e.active || (!!e.endMonth && e.endMonth < currentKey))
+  );
+  const activeExpenses = expenses.filter(
+    (e) => e.startMonth <= currentKey && e.active && (!e.endMonth || e.endMonth >= currentKey)
+  );
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const totalActive = activeExpenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -571,8 +509,8 @@ export default function RecurringPage() {
   return (
     <div className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto">
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      {/* Header — stacks on narrow screens so the two action buttons never overflow */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">{t("Recurring Expenses")}</h1>
           <p className="text-sm text-[#9ca3af] mt-0.5">{t("Bills, subscriptions, and fixed costs")}</p>
@@ -580,14 +518,15 @@ export default function RecurringPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowRecurringModal(true)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 hover:bg-[#1a1d24] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer`}
+            aria-label={t("Apply Recurring Expenses")}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 hover:bg-[#1a1d24] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer`}
           >
             <RefreshCw size={16} aria-hidden="true" />
-            {t("Apply Recurring Expenses")}
+            <span className="hidden sm:inline">{t("Apply Recurring Expenses")}</span>
           </button>
           <button
             onClick={() => { setEditing(undefined); setShowModal(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#00FFA3] hover:bg-[#00ffb3] active:scale-[0.98] text-[#0d0d0d] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#00FFA3] hover:bg-[#00ffb3] active:scale-[0.98] text-[#0d0d0d] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"
             aria-label={t("Add Recurring Expense")}
           >
             <Plus size={16} aria-hidden="true" />
@@ -595,6 +534,8 @@ export default function RecurringPage() {
           </button>
         </div>
       </div>
+
+      {actionError && <ErrorBanner message={actionError} />}
 
       {/* P3: skeleton */}
       {loading ? (
@@ -691,7 +632,6 @@ export default function RecurringPage() {
         {/* Deletion Dialog */}
         {confirmId && (
           <ConfirmDialog
-            type={t("Deletion")}
             message={t("This recurring expense will be permanently deleted. This action cannot be undone.")}
             onConfirm={() => handleDelete(confirmId)}
             onCancel={() => setConfirmId(null)}
@@ -701,7 +641,8 @@ export default function RecurringPage() {
         {/* Conclusion Dialog */}
         {concludeCandidate && (
           <ConfirmDialog
-            type={t("Concluding")}
+            title={t("Confirm Concluding")}
+            confirmLabel={t("Conclude")}
             message={t("Conclude this recurring expense? It will stop applying from the next month.")}
             onConfirm={() => handleConclude(concludeCandidate)}
             onCancel={() => setConcludeCandidate(null)}

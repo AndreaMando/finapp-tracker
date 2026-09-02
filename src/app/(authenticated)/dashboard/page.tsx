@@ -275,8 +275,8 @@ export default function DashboardPage() {
     // P5: full height, scrollable main
     <div className="flex-1 p-6 lg:p-8 max-w-6xl w-full mx-auto">
 
-      {/* Page header */}
-      <div className="flex items-start justify-between mb-8">
+      {/* Page header — stacks on narrow screens so the month selector doesn't get squeezed against the title */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">{t("Dashboard")}</h1>
           <p className="text-sm text-[#9ca3af] mt-0.5">{t("Your monthly financial overview")}</p>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
 
         {/* Month selector — P2: larger touch targets */}
         <div
-          className="flex items-center gap-1 bg-[#111318] border border-[#1a1d24] rounded-xl px-2 py-1"
+          className="flex items-center gap-1 bg-[#111318] border border-[#1a1d24] rounded-xl px-2 py-1 w-fit"
           role="group"
           aria-label={t("Month navigation")}
         >
@@ -348,6 +348,12 @@ export default function DashboardPage() {
               index={3} reduceMotion={reduceMotion}
               label={t("Net Savings")}
               value={formatCurrency(summary.savings)}
+              // Goal contributions are money the user set aside on purpose —
+              // still theirs, so they're not subtracted from Net Savings above,
+              // just called out here so it's clear it's already earmarked.
+              sub={summary.goalContributions > 0
+                ? `${t("of which")} ${formatCurrency(summary.goalContributions)} ${t("set aside for goals")}`
+                : undefined}
               valueColor={savingsColor}
               iconColor={summary.savings >= 0 ? "#00FFA3" : "#f87171"}
               iconBg={summary.savings >= 0 ? "#00FFA320" : "#f8717120"}

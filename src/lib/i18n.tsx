@@ -32,6 +32,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "A user with this email already exists.": "Un utente con questa email esiste già.",
     "Registration successful! Redirecting to login...": "Registrazione completata! Verrai reindirizzato al login...",
     "Please enter a valid email address": "Inserisci un indirizzo email valido",
+    "Password does not meet the minimum requirements.": "La password non rispetta i requisiti minimi.",
+    "Too many registration attempts. Please try again later.": "Troppi tentativi di registrazione. Riprova più tardi.",
     "Registration form": "Modulo di registrazione",
     "Join Vaulty and take control of your finances." : "Unisciti a Vaulty e gestisci le tue finanze.",
     "Creating account..."  : "Creazione account...",
@@ -104,6 +106,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "Over budget": "Oltre il budget",
     "Expense Breakdown": "Suddivisione delle Spese",
     "No data for this month yet.": "Nessun dato per questo mese.",
+    "of which": "di cui",
+    "set aside for goals": "accantonati per gli obiettivi",
     
     // ─── Income ─────────────────────────────────────────────────────────────────
     "Add Income": "Aggiungi Entrata",
@@ -258,7 +262,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "Subscriptions": "Abbonamenti",
     "Transport": "Trasporto",
     "Financing": "Finanziamento",
-    "Mortage": "Mutuo",
+    "Mortgage": "Mutuo",
     "Add Category": "Aggiungi Categoria",
 
     // ─── Errors & Validation ────────────────────────────────────────────────────

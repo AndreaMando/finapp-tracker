@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Trash2, Target, PlusCircle,
-  ChevronDown, ChevronUp, History, AlertTriangle, CheckCircle2,
+  ChevronDown, ChevronUp, History,
 } from "lucide-react";
 import {
   currentMonthKey,
@@ -21,6 +21,8 @@ import {
   type GoalContribution,
 } from "@/lib/store";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useTranslation } from "@/lib/i18n";
 
 // ─────────────────────────────────────────────
@@ -42,7 +44,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 function GoalsSkeleton() {
   return (
     <div aria-busy="true" aria-label="Caricamento obiettivi...">
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[...Array(3)].map((_, i) => (
           <div key={i} className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5 space-y-3">
             <Skeleton className="h-3 w-24" />
@@ -72,88 +74,6 @@ function GoalsSkeleton() {
   );
 }
 
-// ─────────────────────────────────────────────
-// Accessible confirm dialog
-// ─────────────────────────────────────────────
-interface ConfirmDialogProps {
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  reduceMotion: boolean;
-}
-
-function ConfirmDialog({ message, onConfirm, onCancel, reduceMotion }: ConfirmDialogProps) {
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const { t } = useTranslation();
-
-  // P1: focus trap — focus cancel button on open
-  useEffect(() => {
-    cancelRef.current?.focus();
-  }, []);
-
-  // P1: close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onCancel]);
-
-  return (
-    // P1: role="dialog" with aria-modal
-    <div
-      className="fixed inset-0 z-[200] flex items-center justify-center"
-      role="dialog" 
-      aria-modal="true"
-      aria-labelledby="confirm-title"
-      aria-describedby="confirm-desc"
-    >
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60" 
-        onClick={onCancel} 
-        aria-hidden="true" 
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-        transition={{ duration: reduceMotion ? 0 : 0.15, ease: "easeOut" as const }}
-        className="relative z-10 bg-[#1a1d24] border border-[#252830] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
-      >
-        <div className="flex items-start gap-4 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-            <AlertTriangle size={18} className="text-red-400" aria-hidden="true" />
-          </div>
-          <div>
-            <p id="confirm-title" className="text-sm font-semibold text-white">
-              {t("Confirm Deletion")}
-            </p>
-            <p id="confirm-desc" className="text-xs text-[#9ca3af] mt-1 leading-relaxed">
-              {message}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {/* P8: destructive action is visually distinct and NOT the default focus */}
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-          >
-            {t("Delete")}
-          </button>
-          {/* P1: cancel is default focus */}
-          <button
-            ref={cancelRef}
-            onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#252830] text-white hover:bg-[#2e3340] active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3]"
-          >
-            {t("Cancel")}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────
 // New goal form
@@ -431,6 +351,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   // P8: accessible confirm for contribution deletion
   const [confirmContribId, setConfirmContribId] = useState<string | null>(null);
+  const [contribError, setContribError] = useState("");
 
   useEffect(() => {
     if (!showHistory) return;
@@ -456,12 +377,17 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
   const monthlyNeeded = remaining / monthsLeft;
 
   async function handleDeleteContribution(id: string) {
-    await deleteGoalContribution(id);
-    setConfirmContribId(null);
-    const data = (await getContributionsForGoal(goal.id))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    setContributions(data);
-    onRefresh();
+    try {
+      await deleteGoalContribution(id);
+      setConfirmContribId(null);
+      const data = (await getContributionsForGoal(goal.id))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      setContributions(data);
+      onRefresh();
+    } catch (err) {
+      setConfirmContribId(null);
+      setContribError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+    }
   }
 
   return (
@@ -471,6 +397,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
         <div className="h-1.5 w-full" style={{ backgroundColor: goal.color }} aria-hidden="true" />
 
         <div className="p-5">
+          {contribError && <ErrorBanner message={contribError} />}
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2 min-w-0">
@@ -641,6 +568,7 @@ export default function GoalsPage() {
   const [contributing, setContributing] = useState<SavingsGoal | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [confirmGoalId, setConfirmGoalId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
   // P3: cancel flag
   useEffect(() => {
@@ -658,9 +586,14 @@ export default function GoalsPage() {
   }, [refresh]);
 
   async function handleDelete(id: string) {
-    await deleteSavingsGoal(id);
-    setConfirmGoalId(null);
-    setRefresh((r) => r + 1);
+    try {
+      await deleteSavingsGoal(id);
+      setConfirmGoalId(null);
+      setRefresh((r) => r + 1);
+    } catch (err) {
+      setConfirmGoalId(null);
+      setActionError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+    }
   }
 
   const activeGoals    = goals.filter((g) => g.currentAmount < g.targetAmount);
@@ -688,14 +621,16 @@ export default function GoalsPage() {
         </button>
       </div>
 
+      {actionError && <ErrorBanner message={actionError} />}
+
       {/* P3: skeleton */}
       {loading ? (
         <GoalsSkeleton />
       ) : (
         <>
-          {/* Summary */}
+          {/* Summary — single column on phones so currency values don't wrap/clip */}
           {goals.length > 0 && (
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               {[
                 { label: t("Total Goals"), value: goals.length.toString(), sub: `${completedGoals.length} ${t(completedGoals.length === 1 ? "complete" : "completed")}`, color: "text-white" },
                 { label: t("Total Saved"), value: formatCurrency(totalSaved), sub: t("across all goals"), color: "text-indigo-400" },

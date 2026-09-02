@@ -2,13 +2,20 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { oneTimeExpenses } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const data = await db.select().from(oneTimeExpenses).where(eq(oneTimeExpenses.userId, session.user.id));
+  const url = new URL(req.url);
+  const monthKey = url.searchParams.get("monthKey");
+
+  const data = await db.select().from(oneTimeExpenses).where(
+    monthKey
+      ? and(eq(oneTimeExpenses.userId, session.user.id), eq(oneTimeExpenses.monthKey, monthKey))
+      : eq(oneTimeExpenses.userId, session.user.id)
+  );
   return NextResponse.json(data);
 }
 

@@ -97,6 +97,29 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// mutate() wraps fetch for POST/PUT/DELETE calls that don't necessarily
+// return a body we care about, but whose success we DO need to verify —
+// a silent failure here would leave the UI showing a change that never
+// actually happened server-side.
+async function mutate(url: string, options?: RequestInit): Promise<Response> {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      if (typeof window !== "undefined") window.location.href = "/";
+      throw new Error("API Error: Unauthorized");
+    }
+    let message = `API Error: ${res.statusText}`;
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error;
+    } catch {
+      // response wasn't JSON — keep the statusText-based message
+    }
+    throw new Error(message);
+  }
+  return res;
+}
+
 // ─── Income ───────────────────────────────────────────────────────────────────
 
 export async function getIncomes(): Promise<MonthlyIncome[]> {
@@ -109,12 +132,13 @@ export async function getIncomes(): Promise<MonthlyIncome[]> {
 }
 
 export async function getIncomeForMonth(monthKey: MonthKey): Promise<MonthlyIncome | undefined> {
-  const incomes = await getIncomes();
-  return incomes.find((i) => i.monthKey === monthKey);
+  const data = await fetchJson<any[]>(`${API_BASE}/incomes?monthKey=${encodeURIComponent(monthKey)}`);
+  const income = data[0];
+  return income ? { ...income, amount: Number(income.amount), createdAt: new Date(income.createdAt) } : undefined;
 }
 
 export async function upsertIncome(monthKey: MonthKey, amount: number, note: string): Promise<MonthlyIncome> {
-  const res = await fetch(`${API_BASE}/incomes`, {
+  const res = await mutate(`${API_BASE}/incomes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ monthKey, amount, note }),
@@ -124,7 +148,7 @@ export async function upsertIncome(monthKey: MonthKey, amount: number, note: str
 }
 
 export async function deleteIncome(id: string): Promise<void> {
-  await fetch(`${API_BASE}/incomes/${id}`, { method: "DELETE" });
+  await mutate(`${API_BASE}/incomes/${id}`, { method: "DELETE" });
 }
 
 // ─── Recurring Expenses ───────────────────────────────────────────────────────
@@ -147,7 +171,7 @@ export async function addRecurringExpense(
   startMonth: MonthKey,
   endMonth?: MonthKey | null
 ): Promise<RecurringExpense> {
-  const res = await fetch(`${API_BASE}/recurring`, {
+  const res = await mutate(`${API_BASE}/recurring`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, amount, category, startMonth, endMonth }),
@@ -160,7 +184,7 @@ export async function updateRecurringExpense(
   id: string,
   updates: Partial<Omit<RecurringExpense, "id" | "createdAt">> & { applyFromMonth?: MonthKey }
 ): Promise<void> {
-  await fetch(`${API_BASE}/recurring/${id}`, {
+  await mutate(`${API_BASE}/recurring/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -173,7 +197,7 @@ export async function previewRecurringForMonth(monthKey: MonthKey) {
 }
 
 export async function applyRecurringSelections(monthKey: MonthKey, items: Array<{ id: string; amount?: number }>) {
-  const res = await fetch(`${API_BASE}/recurring/apply`, {
+  const res = await mutate(`${API_BASE}/recurring/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ monthKey, items }),
@@ -182,7 +206,7 @@ export async function applyRecurringSelections(monthKey: MonthKey, items: Array<
 }
 
 export async function deleteRecurringExpense(id: string): Promise<void> {
-  await fetch(`${API_BASE}/recurring/${id}`, { method: "DELETE" });
+  await mutate(`${API_BASE}/recurring/${id}`, { method: "DELETE" });
 }
 
 export async function getTotalRecurring(monthKey: MonthKey = currentMonthKey()): Promise<number> {
@@ -205,8 +229,13 @@ export async function getOneTimeExpenses(): Promise<OneTimeExpense[]> {
 }
 
 export async function getOneTimeExpensesForMonth(monthKey: MonthKey): Promise<OneTimeExpense[]> {
-  const all = await getOneTimeExpenses();
-  return all.filter((e) => e.monthKey === monthKey);
+  const data = await fetchJson<any[]>(`${API_BASE}/one-time?monthKey=${encodeURIComponent(monthKey)}`);
+  return data.map(d => ({
+    ...d,
+    amount: Number(d.amount),
+    date: new Date(d.date),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function addOneTimeExpense(
@@ -216,7 +245,7 @@ export async function addOneTimeExpense(
   category: string,
   date: Date
 ): Promise<OneTimeExpense> {
-  const res = await fetch(`${API_BASE}/one-time`, {
+  const res = await mutate(`${API_BASE}/one-time`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ monthKey, name, amount, category, date }),
@@ -234,7 +263,7 @@ export async function updateOneTimeExpense(
   id: string,
   updates: Partial<Omit<OneTimeExpense, "id" | "createdAt">>
 ): Promise<void> {
-  await fetch(`${API_BASE}/one-time/${id}`, {
+  await mutate(`${API_BASE}/one-time/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -242,7 +271,7 @@ export async function updateOneTimeExpense(
 }
 
 export async function deleteOneTimeExpense(id: string): Promise<void> {
-  await fetch(`${API_BASE}/one-time/${id}`, { method: "DELETE" });
+  await mutate(`${API_BASE}/one-time/${id}`, { method: "DELETE" });
 }
 
 export async function getTotalOneTimeForMonth(monthKey: MonthKey): Promise<number> {
@@ -280,7 +309,7 @@ export async function addSavingsGoal(
   deadline: Date,
   color: string
 ): Promise<SavingsGoal> {
-  const res = await fetch(`${API_BASE}/goals`, {
+  const res = await mutate(`${API_BASE}/goals`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, targetAmount, deadline, color }),
@@ -299,7 +328,7 @@ export async function updateSavingsGoal(
   id: string,
   updates: Partial<Omit<SavingsGoal, "id" | "createdAt">>
 ): Promise<void> {
-  await fetch(`${API_BASE}/goals/${id}`, {
+  await mutate(`${API_BASE}/goals/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -307,7 +336,7 @@ export async function updateSavingsGoal(
 }
 
 export async function deleteSavingsGoal(id: string): Promise<void> {
-  await fetch(`${API_BASE}/goals/${id}`, { method: "DELETE" });
+  await mutate(`${API_BASE}/goals/${id}`, { method: "DELETE" });
 }
 
 export async function getGoalContributions(): Promise<GoalContribution[]> {
@@ -320,8 +349,12 @@ export async function getGoalContributions(): Promise<GoalContribution[]> {
 }
 
 export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {
-  const all = await getGoalContributions();
-  return all.filter((c) => c.goalId === goalId);
+  const data = await fetchJson<any[]>(`${API_BASE}/contributions?goalId=${encodeURIComponent(goalId)}`);
+  return data.map(d => ({
+    ...d,
+    amount: Number(d.amount),
+    createdAt: new Date(d.createdAt)
+  }));
 }
 
 export async function addGoalContribution(
@@ -330,7 +363,7 @@ export async function addGoalContribution(
   amount: number,
   note: string
 ): Promise<GoalContribution> {
-  const res = await fetch(`${API_BASE}/contributions`, {
+  const res = await mutate(`${API_BASE}/contributions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ goalId, monthKey, amount, note }),
@@ -344,7 +377,7 @@ export async function addGoalContribution(
 }
 
 export async function deleteGoalContribution(id: string): Promise<void> {
-  await fetch(`${API_BASE}/contributions/${id}`, { method: "DELETE" });
+  await mutate(`${API_BASE}/contributions/${id}`, { method: "DELETE" });
 }
 
 // ─── Monthly Summary ──────────────────────────────────────────────────────────
@@ -360,16 +393,23 @@ export interface MonthlySummary {
 }
 
 export async function getMonthlySummary(monthKey: MonthKey): Promise<MonthlySummary> {
-  const income = (await getIncomeForMonth(monthKey))?.amount ?? 0;
-  const recurringExpenses = await getTotalRecurring(monthKey);
-  const oneTimeExpenses = await getTotalOneTimeForMonth(monthKey);
-  const goalContributions = (await getGoalContributions())
-    .filter((c) => c.monthKey === monthKey)
-    .reduce((sum, c) => sum + c.amount, 0);
-  
+  const [incomeEntry, recurringExpenses, oneTimeExpenses, goalContributionsData] = await Promise.all([
+    getIncomeForMonth(monthKey),
+    getTotalRecurring(monthKey),
+    getTotalOneTimeForMonth(monthKey),
+    fetchJson<any[]>(`${API_BASE}/contributions?monthKey=${encodeURIComponent(monthKey)}`),
+  ]);
+  const income = incomeEntry?.amount ?? 0;
+  const goalContributions = goalContributionsData.reduce((sum, c) => sum + Number(c.amount), 0);
+
+  // Recurring expenses only count once the user confirms them via "Apply
+  // Recurring Expenses" — at that point they're inserted into one-time
+  // expenses, so oneTimeExpenses already reflects any applied recurring
+  // costs. Goal contributions are intentionally NOT deducted from savings:
+  // that money hasn't left the user's pocket, it's just earmarked.
   const totalExpenses = recurringExpenses + oneTimeExpenses;
   const savings = income - oneTimeExpenses;
-  
+
   return {
     monthKey,
     income,
