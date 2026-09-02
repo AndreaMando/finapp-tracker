@@ -1,40 +1,22 @@
-import type { Metadata } from "next";
-import "@/app/globals.css";
-//import { Sidebar } from "@/app/(authenticated)/components/layout/Sidebar";      // old sidebar, now replaced by a top navbar
 import { Navbar } from "@/app/(authenticated)/components/layout/Sidebar";
-import { I18nProvider } from "@/lib/i18n";
-import { cookies } from 'next/headers';
-import AuthProvider from "../AuthProvider";
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import { Analytics } from '@vercel/analytics/next';
 
-export const metadata: Metadata = {
-  title: "Vaulty",
-  description: "Your personal finance tracker",
-};
-
-export default async function RootLayout({
+// NOTE: this is a NESTED layout for the (authenticated) route group. It must
+// NOT render <html>/<body> or re-wrap children in AuthProvider/I18nProvider/
+// SpeedInsights/Analytics — the root layout (src/app/layout.tsx) already does
+// that for every route, this one included. The previous version duplicated
+// all of that here, producing invalid nested <html>/<body> tags and mounting
+// every provider (and both analytics beacons) twice on every authenticated page.
+export default function AuthenticatedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore: any = await cookies();
-  const langCookie = (cookieStore && typeof cookieStore.get === "function") ? cookieStore.get('vaulty_language')?.value as ("en" | "it") | undefined : undefined;
   return (
-    <html lang="en">
-      <body className="bg-[#0d0d0d] text-[#9ca3af] antialiased">
-        <AuthProvider>
-          <I18nProvider initialLang={langCookie}>
-            <div className="w64 min-h-screen">
-              <Navbar />
-              {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don’t allow you to ‘pull’ past the end of the content and see whitespace */}
-              <main className="flex-1 overflow-auto overscroll-y-contain">{children}</main>
-            </div>
-            <SpeedInsights />
-            <Analytics />
-          </I18nProvider>
-        </AuthProvider>
-      </body>
-    </html>
+    <div className="min-h-screen">
+      <Navbar />
+      {/* make the scrollable area contain its overscroll behaviour so mobile browsers (especially iPad Safari) don't allow you to 'pull' past the end of the content and see whitespace.
+          pb-16 reserves space for the fixed mobile bottom nav (see Sidebar.tsx) so it never covers the last bit of page content; md:pb-0 drops that once the bottom nav itself is hidden. */}
+      <main className="flex-1 overflow-auto overscroll-y-contain pb-16 md:pb-0">{children}</main>
+    </div>
   );
 }

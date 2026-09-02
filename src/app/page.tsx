@@ -12,7 +12,6 @@ import {
   Eye, EyeOff,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import DashboardPage from "./(authenticated)/dashboard/page";
 
 // ─────────────────────────────────────────────
 // Slide definitions
@@ -488,16 +487,22 @@ export default function LoginPage() {
           </motion.div>
         )}
 
-        {/* Post-login transition */}
+        {/* Post-login transition — a brief branded loading state while
+            router.push("/dashboard") takes over. Previously this mounted the
+            full DashboardPage component here, which fetched all of the
+            dashboard's data a second time (once for this transition, once
+            again right after navigating) and pulled an authenticated-route
+            page into the public login bundle. */}
         {isLoggedIn && (
           <motion.div
             key="dashboard"
             initial={{ opacity: 0, scale: reduceMotion ? 1 : 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: "easeOut" }}
-            className="fixed inset-0 bg-[#0d0d0d] z-50 overflow-y-auto"
+            className="fixed inset-0 bg-[#0d0d0d] z-50 flex items-center justify-center"
+            aria-hidden="true"
           >
-            <DashboardPage />
+            <Loader2 size={28} className="animate-spin text-[#00FFA3]" />
           </motion.div>
         )}
       </AnimatePresence>
