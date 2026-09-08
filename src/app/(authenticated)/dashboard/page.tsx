@@ -17,6 +17,7 @@ import {
 } from "@/lib/store";
 import RecurringApplyPanel from "@/components/RecurringApplyPanel";
 import { useTranslation } from "@/lib/i18n";
+import { useCountUp } from "@/hooks/useCountUp";
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -88,7 +89,7 @@ function DashboardSkeleton() {
 // ─────────────────────────────────────────────
 interface StatCardProps {
   label: string;
-  value: string;
+  value: number;
   sub?: string;
   valueColor: string;
   iconColor: string;
@@ -101,6 +102,10 @@ interface StatCardProps {
 
 function StatCard({ label, value, sub, valueColor, iconColor, iconBg, icon, index, reduceMotion }: StatCardProps) {
   const [visible, setVisible] = useState(false);
+  // Count the figure up from zero to its real value on first render — the
+  // one authored motion moment for this pass, tied to "watching your money
+  // add up". Skips straight to the final value when reduceMotion is set.
+  const animatedValue = useCountUp(value, reduceMotion);
 
   useEffect(() => {
     // P7: stagger-sequence — 50ms per card, skip if prefers-reduced-motion
@@ -121,7 +126,7 @@ function StatCard({ label, value, sub, valueColor, iconColor, iconBg, icon, inde
         <p className="text-xs text-[#9ca3af] font-medium">{label}</p>
         {/* P1: icon is decorative */}
         <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          className="w-8 h-8 rounded-[22%] flex items-center justify-center shrink-0"
           style={{ backgroundColor: iconBg }}
           aria-hidden="true"
         >
@@ -129,8 +134,8 @@ function StatCard({ label, value, sub, valueColor, iconColor, iconBg, icon, inde
         </div>
       </div>
       {/* P6: tabular-nums for financial values */}
-      <p className={`text-2xl font-bold tabular-nums tracking-tight ${valueColor}`}>{value}</p>
-      {sub && <p className="text-xs text-[#4b5563] mt-1">{sub}</p>}
+      <p className={`text-2xl font-bold tabular-nums tracking-tight ${valueColor}`}>{formatCurrency(animatedValue)}</p>
+      {sub && <p className="text-xs text-[#9ca3af] mt-1">{sub}</p>}
     </div>
   );
 }
@@ -153,7 +158,7 @@ function GoalCard({ goal, reduceMotion }: { goal: SavingsGoal; reduceMotion: boo
           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: goal.color }} aria-hidden="true" />
           <span className="text-sm font-semibold text-white truncate">{goal.name}</span>
         </div>
-        <span className="text-xs text-[#6b7280] shrink-0 ml-2">
+        <span className="text-xs text-[#9ca3af] shrink-0 ml-2">
           {daysLeft > 0 ? `${daysLeft}${t("d left")}` : t("Overdue")}
         </span>
       </div>
@@ -177,11 +182,11 @@ function GoalCard({ goal, reduceMotion }: { goal: SavingsGoal; reduceMotion: boo
         />
       </div>
 
-      <div className="flex justify-between text-xs text-[#6b7280]">
+      <div className="flex justify-between text-xs text-[#9ca3af]">
         <span>{formatCurrency(goal.currentAmount)} {t("saved")}</span>
         <span style={{ color: goal.color, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
       </div>
-      <p className="text-xs text-[#4b5563] mt-1">{formatCurrency(remaining)} {t("to go")}</p>
+      <p className="text-xs text-[#9ca3af] mt-1">{formatCurrency(remaining)} {t("to go")}</p>
     </div>
   );
 }
@@ -208,7 +213,7 @@ function BreakdownBar({
       <div className="flex justify-between text-xs mb-1.5">
         <span className="text-[#9ca3af]">{label}</span>
         <span className="text-[#e5e7eb] tabular-nums">
-          {amount} <span className="text-[#4b5563]">({pct.toFixed(0)}%)</span>
+          {amount} <span className="text-[#9ca3af]">({pct.toFixed(0)}%)</span>
         </span>
       </div>
       <div
@@ -323,7 +328,7 @@ export default function DashboardPage() {
             <StatCard
               index={0} reduceMotion={reduceMotion}
               label={t("Income")}
-              value={formatCurrency(summary.income)}
+              value={summary.income}
               valueColor="text-[#00FFA3]"
               iconColor="#00FFA3" iconBg="#00FFA320"
               icon={<TrendingUp size={16} />}
@@ -331,7 +336,7 @@ export default function DashboardPage() {
             <StatCard
               index={1} reduceMotion={reduceMotion}
               label={t("Total Expenses")}
-              value={formatCurrency(summary.oneTimeExpenses)}
+              value={summary.oneTimeExpenses}
               valueColor="text-red-400"
               iconColor="#f87171" iconBg="#f8717120"
               icon={<TrendingDown size={16} />}
@@ -339,7 +344,7 @@ export default function DashboardPage() {
             <StatCard
               index={2} reduceMotion={reduceMotion}
               label={t("Goal Contributions")}
-              value={formatCurrency(summary.goalContributions)}
+              value={summary.goalContributions}
               valueColor="text-indigo-400"
               iconColor="#818cf8" iconBg="#818cf820"
               icon={<Target size={16} />}
@@ -347,7 +352,7 @@ export default function DashboardPage() {
             <StatCard
               index={3} reduceMotion={reduceMotion}
               label={t("Net Savings")}
-              value={formatCurrency(summary.savings)}
+              value={summary.savings}
               // Goal contributions are money the user set aside on purpose —
               // still theirs, so they're not subtracted from Net Savings above,
               // just called out here so it's clear it's already earmarked.
@@ -379,11 +384,15 @@ export default function DashboardPage() {
 
             {/* Top-right: Breakdown */}
             <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5">
-              <h2 className="text-sm font-semibold text-white mb-4">{t("Expense Breakdown")}</h2>
+              <h2 className="text-sm font-semibold text-white mb-1">{t("Expense Breakdown")}</h2>
+              {/* P2: each bar is an independent % of income, not a 100%-stacked
+                  breakdown — without this label the four "(X%)" figures read
+                  as parts of one whole and can visibly sum past 100%. */}
+              <p className="text-xs text-[#9ca3af] mb-4">{t("Each row shown as % of income")}</p>
               {summary.income === 0 && summary.totalExpenses === 0 ? (
                 // P8: empty state with action
                 <div className="py-8 text-center">
-                  <p className="text-sm text-[#6b7280] mb-3">{t("No data for this month yet.")}</p>
+                  <p className="text-sm text-[#9ca3af] mb-3">{t("No data for this month yet.")}</p>
                   <Link
                     href="/income"
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00FFA3] hover:text-[#00ffb3] transition-colors"

@@ -232,11 +232,11 @@ export function Navbar() {
                 min-w-[44px] min-h-[44px] justify-center
                 rounded-xl transition-colors duration-150
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3]
-                ${isActive ? "text-[#00FFA3]" : "text-[#6b7280] hover:text-white"}
+                ${isActive ? "text-[#00FFA3]" : "text-[#9ca3af] hover:text-white"}
               `}
             >
               <Icon size={20} aria-hidden="true" />
-              <span className="text-[9px] font-medium">{t(label)}</span>
+              <span className="text-[10px] font-medium">{t(label)}</span>
             </Link>
           );
         })}

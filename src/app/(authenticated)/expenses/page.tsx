@@ -370,10 +370,10 @@ export default function ExpensesPage() {
           <button
             onClick={() => setShowRecurringModal(true)}
             aria-label={t("Apply Recurring Expenses")}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 hover:bg-[#1a1d24] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer`}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-[#e5e7eb] bg-[#0d0d0d] border border-[#252830] transition-all duration-150 hover:bg-[#1a1d24] hover:text-white hover:border-[#363a44] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer"
           >
             <RefreshCw size={16} aria-hidden="true" />
-            <span className="hidden sm:inline">{t("Apply Recurring Expenses")}</span>
+            <span>{t("Apply Recurring")}</span>
           </button>
           <button
             onClick={() => { setEditing(undefined); setShowModal(true); }}
@@ -424,7 +424,7 @@ export default function ExpensesPage() {
         <>
           {/* Summary card */}
           <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5 mb-6 flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center shrink-0" aria-hidden="true">
+            <div className="w-12 h-12 bg-red-500/10 rounded-[22%] flex items-center justify-center shrink-0" aria-hidden="true">
               <ShoppingBag size={22} className="text-red-400" />
             </div>
             <div>
@@ -434,7 +434,7 @@ export default function ExpensesPage() {
               <p className="text-2xl font-bold tabular-nums tracking-tight text-red-400">
                 {formatCurrency(total)}
               </p>
-              <p className="text-xs text-[#4b5563] mt-0.5">
+              <p className="text-xs text-[#9ca3af] mt-0.5">
                 {expenses.length} {t(expenses.length === 1 ? "expense" : "expenses")}
               </p>
             </div>
@@ -454,7 +454,7 @@ export default function ExpensesPage() {
                 className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] ${
                   viewMode === mode
                     ? "bg-[#1a1d24] text-white shadow-sm"
-                    : "text-[#6b7280] hover:text-white"
+                    : "text-[#9ca3af] hover:text-white"
                 }`}
               >
                 {t(mode === "category" ? "Category" : "Date")}
@@ -467,7 +467,7 @@ export default function ExpensesPage() {
             <div className="text-center py-16">
               <ShoppingBag size={40} className="mx-auto mb-3 text-[#252830]" aria-hidden="true" />
               <p className="font-semibold text-[#9ca3af]">{t("No expenses for this month")}</p>
-              <p className="text-sm text-[#6b7280] mt-1">{t("Track your spending by adding expenses")}</p>
+              <p className="text-sm text-[#9ca3af] mt-1">{t("Track your spending by adding expenses")}</p>
               <button
                 onClick={() => setShowModal(true)}
                 className="mt-4 flex items-center gap-2 mx-auto px-4 py-2.5 rounded-xl text-sm font-bold bg-[#00FFA3] hover:bg-[#00ffb3] active:scale-[0.98] text-[#0d0d0d] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"
@@ -493,13 +493,13 @@ export default function ExpensesPage() {
                           >
                             {t(groupKey)}
                           </span>
-                          <span className="text-sm text-[#6b7280] tabular-nums">
+                          <span className="text-sm text-[#9ca3af] tabular-nums">
                             {t("Total:")}{" "}
                             <span className="text-[#e5e7eb] font-semibold">{formatCurrency(catTotal)}</span>
                           </span>
                         </>
                       ) : (
-                        <span className="text-sm font-semibold text-[#6b7280]">
+                        <span className="text-sm font-semibold text-[#9ca3af]">
                           {formatDate(groupKey, locale)}
                         </span>
                       )}
@@ -517,13 +517,13 @@ export default function ExpensesPage() {
                             <div className="min-w-0">
                               <p className="font-medium text-[#e5e7eb] truncate">{expense.name}</p>
                               {viewMode === "category" ? (
-                              <p className="text-xs text-[#6b7280] mt-0.5">
+                              <p className="text-xs text-[#9ca3af] mt-0.5">
                                 {formatDate(expense.date.toISOString(), locale)}
                               </p>
                               ) : null}
                               {viewMode === "date" && (
                                 <span
-                                  className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold mt-1"
+                                  className="inline-block text-[11px] px-2 py-0.5 rounded-full font-semibold mt-1"
                                   style={{ backgroundColor: expStyle.bg, color: expStyle.text }}
                                 >
                                   {t(expense.category)}

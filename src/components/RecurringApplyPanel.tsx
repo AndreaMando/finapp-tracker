@@ -63,11 +63,17 @@ export default function RecurringApplyPanel({
             {formatMonthKey(monthKey, locale)}
           </p>
           {!loading && (
-            <p className="text-xs text-[#6b7280] mt-0.5">
-              {appliedCount > 0
-                ? `${appliedCount} ${t("already applied")} · `
-                : ""}
-              {selectedCount} {t("of")} {pendingCount} {t("selected")}
+            <p className="text-xs text-[#9ca3af] mt-0.5">
+              {pendingCount === 0 && appliedCount > 0 ? (
+                t("All recurring expenses applied for this month")
+              ) : (
+                <>
+                  {appliedCount > 0
+                    ? `${appliedCount} ${t("already applied")} · `
+                    : ""}
+                  {selectedCount} {t("of")} {pendingCount} {t("selected")}
+                </>
+              )}
             </p>
           )}
         </div>
@@ -113,7 +119,7 @@ export default function RecurringApplyPanel({
         ) : items.length === 0 ? (
           <div className="text-center py-8">
             <RefreshCw size={28} className="mx-auto mb-2 text-[#252830]" aria-hidden="true" />
-            <p className="text-sm text-[#6b7280]">{t("No recurring items for this month")}</p>
+            <p className="text-sm text-[#9ca3af]">{t("No recurring items for this month")}</p>
           </div>
         ) : (
           items.map((item) => (

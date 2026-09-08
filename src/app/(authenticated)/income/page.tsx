@@ -44,7 +44,7 @@ function IncomeSkeleton() {
       {/* Current month card */}
       <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-6 mb-8 space-y-4">
         <div className="flex items-center gap-3">
-          <Skeleton className="w-10 h-10 rounded-xl" />
+          <Skeleton className="w-10 h-10 rounded-[22%]" />
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-4 w-32" />
@@ -285,7 +285,7 @@ export default function IncomePage() {
           {/* Current month card */}
           <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0" aria-hidden="true">
+              <div className="w-10 h-10 bg-emerald-500/10 rounded-[22%] flex items-center justify-center shrink-0" aria-hidden="true">
                 <TrendingUp size={20} className="text-emerald-400" />
               </div>
               <div>

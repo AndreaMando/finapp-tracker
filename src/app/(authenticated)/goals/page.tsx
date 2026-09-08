@@ -23,6 +23,7 @@ import {
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { SealedBadge } from "@/components/ui/SealedBadge";
 import { useTranslation } from "@/lib/i18n";
 
 // ─────────────────────────────────────────────
@@ -404,11 +405,13 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
               <div className="w-3 h-3 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: goal.color }} aria-hidden="true" />
               <div className="min-w-0">
                 <h3 className="font-semibold text-white truncate">{goal.name}</h3>
-                <p className="text-xs text-[#6b7280] mt-0.5">
-                  {t("Deadline")}{": "}
-                  {goal.deadline.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })}
-                  {isOverdue && <span className="ml-1 text-red-400 font-medium">· {t("Overdue")}</span>}
-                  {isComplete && <span className="ml-1 text-[#00FFA3] font-medium">· {t("Completed")}</span>}
+                <p className="text-xs text-[#9ca3af] mt-0.5 flex items-center flex-wrap gap-x-1.5 gap-y-1">
+                  <span>
+                    {t("Deadline")}{": "}
+                    {goal.deadline.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
+                  {isOverdue && <span className="text-red-400 font-medium">· {t("Overdue")}</span>}
+                  {isComplete && <SealedBadge label={t("Completed")} />}
                 </p>
               </div>
             </div>
@@ -426,7 +429,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1.5">
               <span className="font-semibold text-[#e5e7eb] tabular-nums">{formatCurrency(goal.currentAmount)}</span>
-              <span className="text-[#6b7280] tabular-nums">{t("of")} {formatCurrency(goal.targetAmount)}</span>
+              <span className="text-[#9ca3af] tabular-nums">{t("of")} {formatCurrency(goal.targetAmount)}</span>
             </div>
             <div
               className="w-full bg-[#1a1d24] rounded-full h-3 overflow-hidden"
@@ -443,7 +446,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
                 }}
               />
             </div>
-            <div className="flex justify-between text-xs text-[#6b7280] mt-1">
+            <div className="flex justify-between text-xs text-[#9ca3af] mt-1">
               <span>{pct.toFixed(1)}% {t("complete")}</span>
               <span className="tabular-nums">{formatCurrency(remaining)} {t("remaining")}</span>
             </div>
@@ -453,13 +456,13 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
           {!isComplete && (
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-[#0d0d0d] border border-[#1a1d24] rounded-xl p-3 text-center">
-                <p className="text-[10px] text-[#6b7280] mb-1">{t("Days left")}</p>
+                <p className="text-[11px] text-[#9ca3af] mb-1">{t("Days left")}</p>
                 <p className={`text-lg font-bold tabular-nums ${isOverdue ? "text-red-400" : "text-white"}`}>
                   {isOverdue ? t("Overdue") : daysLeft}
                 </p>
               </div>
               <div className="bg-[#0d0d0d] border border-[#1a1d24] rounded-xl p-3 text-center">
-                <p className="text-[10px] text-[#6b7280] mb-1">{t("Needed/month")}</p>
+                <p className="text-[11px] text-[#9ca3af] mb-1">{t("Needed/month")}</p>
                 <p className="text-lg font-bold text-white tabular-nums">{formatCurrency(monthlyNeeded)}</p>
               </div>
             </div>
@@ -506,7 +509,7 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
               >
                 <div className="mt-4 border-t border-[#1a1d24] pt-4">
                   {contributions.length === 0 ? (
-                    <p className="text-sm text-[#6b7280] text-center py-2">{t("No contributions yet.")}</p>
+                    <p className="text-sm text-[#9ca3af] text-center py-2">{t("No contributions yet.")}</p>
                   ) : (
                     <div className="space-y-2">
                       {contributions.map((c) => (
@@ -515,8 +518,8 @@ function GoalCard({ goal, onContribute, onDelete, onRefresh, reduceMotion }: Goa
                             <span className="text-sm font-semibold text-[#e5e7eb] tabular-nums">
                               {formatCurrency(c.amount)}
                             </span>
-                            {c.note && <span className="text-[#6b7280] text-xs ml-2">· {c.note}</span>}
-                            <p className="text-xs text-[#6b7280]">
+                            {c.note && <span className="text-[#9ca3af] text-xs ml-2">· {c.note}</span>}
+                            <p className="text-xs text-[#9ca3af]">
                               {c.createdAt.toLocaleDateString(locale, { day: "numeric" })}{" "}
                               {formatMonthKey(c.monthKey, locale)}
                             </p>
@@ -639,7 +642,7 @@ export default function GoalsPage() {
                 <div key={label} className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5">
                   <p className="text-sm text-[#9ca3af]">{label}</p>
                   <p className={`text-2xl font-bold tabular-nums tracking-tight mt-1 ${color}`}>{value}</p>
-                  <p className="text-xs text-[#4b5563] mt-0.5">{sub}</p>
+                  <p className="text-xs text-[#9ca3af] mt-0.5">{sub}</p>
                 </div>
               ))}
             </div>
@@ -690,7 +693,7 @@ export default function GoalsPage() {
             <div className="text-center py-20">
               <Target size={48} className="mx-auto mb-4 text-[#252830]" aria-hidden="true" />
               <p className="font-semibold text-lg text-[#9ca3af]">{t("No savings goals yet")}</p>
-              <p className="text-sm text-[#6b7280] mt-1 mb-6">
+              <p className="text-sm text-[#9ca3af] mt-1 mb-6">
                 {t("Create a goal to start tracking your savings progress")}
               </p>
               <button

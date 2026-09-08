@@ -3,6 +3,7 @@
 // components/recurring/RecurringItemRow.tsx
 
 import { getCategoryStyle, type RecurringItem } from "./useRecurringApply";
+import { SealedBadge } from "@/components/ui/SealedBadge";
 import { useTranslation } from "@/lib/i18n";
 
 interface Props {
@@ -122,17 +123,10 @@ export function RecurringItemRow({ item, checked, onToggle, onAmountChange }: Pr
           >
             {item.name}
           </span>
-          {item.isApplied && (
-            <span
-              className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold"
-              style={{ backgroundColor: "#00FFA315", color: "#00FFA3" }}
-            >
-              {t("Applied")}
-            </span>
-          )}
+          {item.isApplied && <SealedBadge label={t("Applied")} className="shrink-0" />}
         </div>
         <span
-          className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold mt-1"
+          className="inline-block text-[11px] px-2 py-0.5 rounded-full font-semibold mt-1"
           style={{ backgroundColor: style.bg, color: style.text }}
         >
           {t(item.category)}
