@@ -275,21 +275,28 @@ export default function RegisterPage() {
                   : <Eye size={16} aria-hidden="true" />
                 }
               </button>
+            </div>
 
-              {/* Rules tooltip */}
-              <AnimatePresence>
-                {passwordFocused && (
-                  <motion.div
+            {/* Rules panel — P1 fix: in normal document flow (not absolutely
+                overlaid) so it pushes Confirm Password / Sign Up down instead
+                of covering them and causing a dead click while open. */}
+            <AnimatePresence initial={false}>
+              {passwordFocused && (
+                <motion.div
+                  key="password-rules-wrapper"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={trans({ duration: 0.18, ease: "easeOut" as const })}
+                  style={{ overflow: "hidden" }}
+                >
+                  <div
                     id="password-rules"
                     // P1: status instead of tooltip — screen readers read it without hover
                     role="status"
                     aria-live="polite"
                     aria-atomic="true"
-                    initial={{ opacity: 0, y: reduceMotion ? 0 : 6, scale: reduceMotion ? 1 : 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: reduceMotion ? 0 : 4, scale: reduceMotion ? 1 : 0.97 }}
-                    transition={trans({ duration: 0.18, ease: "easeOut" as const })}
-                    className="absolute left-0 top-[calc(100%+8px)] w-full bg-[#1a1d24] border border-[#252830] rounded-xl px-4 py-3 shadow-2xl z-50"
+                    className="relative mt-2 bg-[#1a1d24] border border-[#252830] rounded-xl px-4 py-3 shadow-2xl"
                   >
                     {/* Arrow */}
                     <div
@@ -325,10 +332,10 @@ export default function RegisterPage() {
                         </div>
                       ))}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Confirm password */}

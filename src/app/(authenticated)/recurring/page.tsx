@@ -335,12 +335,12 @@ function ExpenseRow({ expense, locale, paused, upcoming, onEdit, onDelete, onCon
       <div className="flex items-center gap-3 min-w-0">
         {/* removed inline toggle: use Edit / Conclude / Delete instead */}
         <div className="min-w-0">
-          <p className={`font-medium truncate ${paused ? "text-[#6b7280] line-through" : "text-[#e5e7eb]"}`}>
+          <p className={`font-medium truncate ${paused ? "text-[#9ca3af] line-through" : "text-[#e5e7eb]"}`}>
             {expense.name}
           </p>
           <span
-            className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold mt-1"
-            style={{ backgroundColor: paused ? "#1a1d24" : style.bg, color: paused ? "#6b7280" : style.text }}
+            className="inline-block text-[11px] px-2 py-0.5 rounded-full font-semibold mt-1"
+            style={{ backgroundColor: paused ? "#1a1d24" : style.bg, color: paused ? "#9ca3af" : style.text }}
           >
             {t(expense.category)}
           </span>
@@ -348,11 +348,11 @@ function ExpenseRow({ expense, locale, paused, upcoming, onEdit, onDelete, onCon
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className={`font-semibold tabular-nums text-sm ${paused ? "text-[#4b5563]" : "text-[#e5e7eb]"}`}>
+        <span className={`font-semibold tabular-nums text-sm ${paused ? "text-[#9ca3af]" : "text-[#e5e7eb]"}`}>
           {formatCurrency(expense.amount)}
-          <span className="text-xs text-[#6b7280] font-normal ml-0.5">{t("/mo")}</span>
+          <span className="text-xs text-[#9ca3af] font-normal ml-0.5">{t("/mo")}</span>
         </span>
-        <span className="text-[10px] text-[#6b7280]">
+        <span className="text-[11px] text-[#9ca3af]">
           {upcoming ? t("Starts:") : t("Started:")} {formatMonthKey(expense.startMonth, locale)}
         </span>
         {/* P2: 36×36 action buttons */}
@@ -519,10 +519,10 @@ export default function RecurringPage() {
           <button
             onClick={() => setShowRecurringModal(true)}
             aria-label={t("Apply Recurring Expenses")}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 hover:bg-[#1a1d24] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer`}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-[#e5e7eb] bg-[#0d0d0d] border border-[#252830] transition-all duration-150 hover:bg-[#1a1d24] hover:text-white hover:border-[#363a44] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] cursor-pointer"
           >
             <RefreshCw size={16} aria-hidden="true" />
-            <span className="hidden sm:inline">{t("Apply Recurring Expenses")}</span>
+            <span>{t("Apply Recurring")}</span>
           </button>
           <button
             onClick={() => { setEditing(undefined); setShowModal(true); }}
@@ -544,7 +544,7 @@ export default function RecurringPage() {
         <>
           {/* Summary card */}
           <div className="bg-[#111318] border border-[#1a1d24] rounded-2xl p-5 mb-8 flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0" aria-hidden="true">
+            <div className="w-12 h-12 bg-orange-500/10 rounded-[22%] flex items-center justify-center shrink-0" aria-hidden="true">
               <RefreshCw size={22} className="text-orange-400" />
             </div>
             <div>
@@ -552,7 +552,7 @@ export default function RecurringPage() {
               <p className="text-2xl font-bold tabular-nums tracking-tight text-orange-400">
                 {formatCurrency(totalActive)}
               </p>
-              <p className="text-xs text-[#4b5563] mt-0.5">
+              <p className="text-xs text-[#9ca3af] mt-0.5">
                 {activeExpenses.length} {t(activeExpenses.length === 1 ? "active expense" : "active expenses")}
               </p>
             </div>
@@ -563,7 +563,7 @@ export default function RecurringPage() {
             <div className="text-center py-16">
               <RefreshCw size={40} className="mx-auto mb-3 text-[#252830]" aria-hidden="true" />
               <p className="font-semibold text-[#9ca3af]">{t("No recurring expenses yet")}</p>
-              <p className="text-sm text-[#6b7280] mt-1">{t("Add your bills, subscriptions, and fixed costs")}</p>
+              <p className="text-sm text-[#9ca3af] mt-1">{t("Add your bills, subscriptions, and fixed costs")}</p>
               <button
                 onClick={() => setShowModal(true)}
                 className="mt-4 flex items-center gap-2 mx-auto px-4 py-2.5 rounded-xl text-sm font-bold bg-[#00FFA3] hover:bg-[#00ffb3] active:scale-[0.98] text-[#0d0d0d] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"

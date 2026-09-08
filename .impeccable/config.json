@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/app/(authenticated)/dashboard/page.tsx"
+        ],
+        "createdAt": "2026-09-08T16:29:36.419Z",
+        "reason": "Width transition only on a 1.5px progress-bar fill (goal-card and breakdown-bar), already gated behind reduceMotion like every other animation in this codebase; critique Assessment B independently rated this true-positive-but-low-severity, not user-perceptible layout thrash. Not one of the 5 Priority Issues selected for this pass."
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/app/(authenticated)/goals/page.tsx"
+        ],
+        "createdAt": "2026-09-08T16:29:39.103Z",
+        "reason": "Same width transition on a 3px goal-progress-bar fill, gated behind reduceMotion, identical pattern to dashboard/page.tsx. Critique Assessment B rated it true-positive-but-low-severity, not selected as one of the 5 Priority Issues for this pass."
+      }
+    ]
+  }
+}
