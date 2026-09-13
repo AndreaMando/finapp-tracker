@@ -110,6 +110,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "Over budget": "Oltre il budget",
     "Expense Breakdown": "Suddivisione delle Spese",
     "Each row shown as % of income": "Ogni riga mostrata come % del reddito",
+    "Recurring Still to Apply": "Ricorrenti da Applicare",
     "No data for this month yet.": "Nessun dato per questo mese.",
     "of which": "di cui",
     "set aside for goals": "accantonati per gli obiettivi",
