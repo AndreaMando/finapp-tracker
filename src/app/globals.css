@@ -1,1 +1,103 @@
 @import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   Vaulty design tokens — "Newsprint Financial Page" direction.
+   Direction contract: .impeccable/surfaces/src-app-authenticated-dashboard-page-tsx.md
+   Manual light/dark toggle via [data-theme] on <html> (not OS preference —
+   the settings menu owns this), read/written by ThemeProvider.
+   ───────────────────────────────────────────────────────────── */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  /* warm-cool drifting off-white, never flat white */
+  --bg: #f7f5f1;
+  --surface: #fffefc;
+  --surface-sunken: #f0ecE4;
+  --ink: #17140f;
+  --ink-muted: #6b6558;
+  --ink-faint: #948d7c;
+  --hairline: #e1dcd1;
+  --accent: #1f6f52;
+  --accent-contrast: #fffefc;
+  --negative: #b3402b;
+  --goal: #5c5296;
+  --shadow-color: 30 25% 10%;
+}
+
+:root[data-theme="dark"] {
+  /* warm near-black, never pure black */
+  --bg: #15130f;
+  --surface: #1c1a15;
+  --surface-sunken: #100f0c;
+  --ink: #f2efe7;
+  --ink-muted: #a69c89;
+  --ink-faint: #6f6858;
+  --hairline: #322d24;
+  --accent: #3fae82;
+  --accent-contrast: #0e1310;
+  --negative: #d9694c;
+  --goal: #8f86d9;
+  --shadow-color: 30 40% 2%;
+}
+
+@theme inline {
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-negative: var(--negative);
+  --color-goal: var(--goal);
+}
+
+html {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Browser surfaces carry the design too — selection, caret, scrollbar, focus ring. */
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+* {
+  scrollbar-color: var(--ink-faint) transparent;
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tabular numerals everywhere a figure appears — ledger-column authenticity. */
+.tabular-nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}

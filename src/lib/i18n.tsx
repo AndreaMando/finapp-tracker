@@ -58,6 +58,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "Personal Finance": "Finanza Personale",
     "Language": "Lingua",
     "Select language": "Seleziona lingua",
+    "Theme": "Tema",
+    "Light": "Chiaro",
+    "Dark": "Scuro",
     "footerText": "Dati memorizzati localmente nel browser",
     "Cancel": "Annulla",
     "Update": "Aggiorna",
@@ -132,6 +135,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "Edit Income": "Modifica Entrata",
     "e.g. 2500.00": "es. 2500.00",
     "e.g. Salary + bonus": "es. Stipendio + bonus",
+    "Income by Month": "Entrate per Mese",
 
     // ─── Expenses (One-Time) ────────────────────────────────────────────────────
     "One-time Expenses": "Spese Una Tantum",
@@ -173,6 +177,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "Applying...": "Applicazione in corso...",
     "Apply Recurring": "Applica ricorrenti",
     "Apply recurring expenses to this month": "Applica le spese ricorrenti a questo mese",
+    "One-time expenses by month": "Spese una tantum per mese",
+    "No expenses recorded for this year yet": "Nessuna spesa registrata per quest'anno",
     "Monthly Amount": "Importo Mensile",
     "Monthly Amount (€)": "Importo Mensile (€)",
     "Start Month": "Mese di inizio",
@@ -196,6 +202,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "e.g. Netflix, Rent, Car Insurance": "es. Netflix, Affitto, Assicurazione auto",
     "Caricamento spese ricorrenti...": "Loading recurring expenses...",
     "Conclude this recurring expense? It will stop applying from the next month.": "Concludere questa spesa ricorrente? Non verrà più applicata dal mese successivo.",
+    "Make recurring": "Rendi ricorrente",
+    "One-time Expenses tab": "Scheda spese una tantum",
+    "Recurring Expenses tab": "Scheda spese ricorrenti",
 
     // ─── Goals ──────────────────────────────────────────────────────────────────
     "Savings Goals": "Obiettivi di Risparmio",

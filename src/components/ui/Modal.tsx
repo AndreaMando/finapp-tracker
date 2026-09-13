@@ -50,7 +50,7 @@ export function Modal({ title, onClose, children, containerClassName }: ModalPro
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
@@ -60,20 +60,20 @@ export function Modal({ title, onClose, children, containerClassName }: ModalPro
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`bg-[#0d0d0d] rounded-2xl shadow-2xl w-full mx-4 sm:mx-auto ${containerClassName ?? "max-w-lg"} overflow-hidden`}
+        className={`bg-surface border border-hairline rounded-lg shadow-lg w-full mx-4 sm:mx-auto ${containerClassName ?? "max-w-lg"} overflow-hidden`}
       >
         <div className="flex items-center justify-between px-6 py-4">
-          <h2 id="modal-title" className="text-xl font-semibold text-white">{title}</h2>
+          <h2 id="modal-title" className="text-lg font-semibold text-ink">{title}</h2>
           <button
             ref={closeRef}
             onClick={onClose}
-            className="p-2 rounded-lg text-[#9ca3af] hover:text-white hover:bg-[#111318] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3]"
+            className="p-2 rounded-md text-ink-muted hover:text-ink hover:bg-surface-sunken transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Close"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="border border-[#252830] my-1" />
+        <div className="border-t border-hairline" />
         <div className="px-6 py-5">{children}</div>
       </div>
     </div>

@@ -11,10 +11,10 @@ export function ErrorBanner({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="flex items-center gap-2.5 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4"
+      className="flex items-center gap-2.5 bg-negative/10 border border-negative/20 rounded-lg px-4 py-3 mb-4"
     >
-      <AlertCircle size={14} className="shrink-0 text-red-400" aria-hidden="true" />
-      <p className="text-xs font-medium text-red-400">{message}</p>
+      <AlertCircle size={14} className="shrink-0 text-negative" aria-hidden="true" />
+      <p className="text-xs font-medium text-negative">{message}</p>
     </div>
   );
 }

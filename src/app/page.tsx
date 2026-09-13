@@ -12,6 +12,7 @@ import {
   Eye, EyeOff,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { Logo } from "@/components/Logo";
 
 // ─────────────────────────────────────────────
 // Slide definitions
@@ -23,7 +24,6 @@ const slides = [
     label:       { en: "Dashboard",  it: "Panoramica"   },
     title:       { en: "Everything under control",                   it: "Tutto sotto controllo"         },
     description: { en: "Monthly income, expenses and savings in a single dashboard. Always up to date.", it: "Entrate, spese e risparmi in un unico cruscotto mensile. Sempre aggiornato." },
-    accentColor: "#00FFA3",
     screenshot:  { en: "/screenshots/dashboard_en.png", it: "/screenshots/dashboard_it.png" },
   },
   {
@@ -32,7 +32,6 @@ const slides = [
     label:       { en: "Income",     it: "Entrate"      },
     title:       { en: "Track every income",                         it: "Traccia ogni guadagno"         },
     description: { en: "Record your salary and monitor the monthly progress with a complete history.",   it: "Registra lo stipendio e monitora l'andamento mese per mese con storico completo." },
-    accentColor: "#66dae9",
     screenshot:  { en: "/screenshots/income_en.png",    it: "/screenshots/income_it.png"    },
   },
   {
@@ -41,7 +40,6 @@ const slides = [
     label:       { en: "Expenses",   it: "Spese fisse"  },
     title:       { en: "Zero surprises at the end of the month",     it: "Zero sorprese a fine mese"     },
     description: { en: "Subscriptions, insurance and installments always visible. No forgotten expenses.", it: "Abbonamenti, assicurazioni e rate sempre visibili. Nessuna spesa dimenticata." },
-    accentColor: "#fb923c",
     screenshot:  { en: "/screenshots/expenses_en.png",  it: "/screenshots/expenses_it.png"  },
   },
   {
@@ -50,7 +48,6 @@ const slides = [
     label:       { en: "Goals",      it: "Obiettivi"    },
     title:       { en: "Save with a plan",                           it: "Risparmia con metodo"          },
     description: { en: "Create savings goals, track your progress and plan for the future.",             it: "Crea obiettivi di risparmio, monitora i progressi e pianifica il futuro."    },
-    accentColor: "#f02b76",
     screenshot:  { en: "/screenshots/goals_en.png",     it: "/screenshots/goals_it.png"     },
   },
 ];
@@ -84,7 +81,7 @@ function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
       <div className="flex items-center justify-center flex-1">
         {/* P1: landmark text, not decorative */}
         <p
-          className="text-white font-bold italic text-center leading-tight tracking-tight"
+          className="text-ink font-semibold italic text-center leading-tight tracking-tight"
           style={{ fontSize: "clamp(1.3rem, 2vw, 2rem)" }}
         >
           {t("Because our goal is to make your goals easier.")}
@@ -105,15 +102,11 @@ function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
             aria-label={s.label[lang]}
             // P2: 44×44 touch target via padding
             onClick={() => setCurrent(i)}
-            className="cursor-pointer p-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] rounded"
+            className="cursor-pointer p-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
           >
             <div
-              className="h-1 rounded-full"
-              style={{
-                width: i === current ? "20px" : "6px",
-                backgroundColor: i === current ? slide.accentColor : "#363a44",
-                transition: reduceMotion ? "none" : "all 300ms",
-              }}
+              className={`h-1 rounded-full transition-all ${i === current ? "w-5 bg-accent" : "w-1.5 bg-hairline"}`}
+              style={{ transitionDuration: reduceMotion ? "0ms" : "300ms" }}
             />
           </button>
         ))}
@@ -135,17 +128,16 @@ function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
           >
             <div className="flex justify-center items-center gap-2 mb-2">
               <div
-                className="w-6 h-6 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: `${slide.accentColor}25` }}
+                className="w-6 h-6 rounded-lg flex items-center justify-center bg-accent/10"
                 aria-hidden="true"
               >
-                <Icon size={13} style={{ color: slide.accentColor }} />
+                <Icon size={13} className="text-accent" />
               </div>
-              <h2 className="text-lg font-bold text-white leading-tight max-w-sm">
+              <h2 className="text-lg font-semibold text-ink leading-tight max-w-sm">
                 {slide.title[lang]}
               </h2>
             </div>
-            <p className="text-sm text-[#6b7280] leading-relaxed max-w-sm">
+            <p className="text-sm text-ink-muted leading-relaxed max-w-sm">
               {slide.description[lang]}
             </p>
           </motion.div>
@@ -163,21 +155,27 @@ function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
             transition={reduceMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
             className="w-[60%] relative"
           >
-            <div className="bg-[#1a1d24] rounded-xl overflow-hidden border border-[#252830] shadow-2xl">
+            <div className="bg-surface rounded-lg overflow-hidden border border-hairline">
               {/* Browser chrome */}
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#111318] border-b border-[#252830]">
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-surface-sunken border-b border-hairline">
                 <div className="flex gap-1.5 shrink-0" aria-hidden="true">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#363a44]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#363a44]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#363a44]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-hairline" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-hairline" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-hairline" />
                 </div>
-                <div className="flex-1 bg-[#1a1d24] rounded-md px-2.5 py-1 flex items-center gap-1.5 min-w-0">
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: slide.accentColor }} aria-hidden="true" />
-                  <span className="text-[9px] text-[#6b7280] font-mono truncate">app.vaulty.io/{slide.id}</span>
+                <div className="flex-1 bg-surface rounded-md px-2.5 py-1 flex items-center gap-1.5 min-w-0 border border-hairline">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" aria-hidden="true" />
+                  <span className="text-[9px] text-ink-faint font-mono truncate">app.vaulty.io/{slide.id}</span>
                 </div>
               </div>
-              {/* P3: explicit aspect ratio prevents CLS */}
-              <div className="relative w-full opacity-80" style={{ aspectRatio: "16/10" }}>
+              {/* P3: explicit aspect ratio prevents CLS. Screenshots are
+                  regenerated from the shipped redesign itself (see
+                  scripts/capture-marketing-screenshots.cjs) — no filter
+                  needed now that they match the surrounding palette. */}
+              <div
+                className="relative w-full bg-surface-sunken"
+                style={{ aspectRatio: "16/10" }}
+              >
                 <Image
                   src={slide.screenshot[lang]}
                   // P1: meaningful alt text describing the screen
@@ -192,12 +190,6 @@ function FeatureCarousel({ reduceMotion }: { reduceMotion: boolean }) {
                 />
               </div>
             </div>
-            {/* Glow */}
-            <div
-              className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3/4 h-4 rounded-full blur-xl opacity-30 pointer-events-none"
-              style={{ backgroundColor: slide.accentColor }}
-              aria-hidden="true"
-            />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -258,27 +250,19 @@ export default function LoginPage() {
   : { duration: 0.75, ease: [0.43, 0.13, 0.23, 0.96] as const };
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0d0d0d]">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-bg">
 
       {/* Animated logo */}
       <motion.div
         initial={{ top: ls.top, left: ls.left, x: ls.x, y: ls.y, width: ls.width, height: ls.height }}
         animate={{ top: ls.top, left: ls.left, x: ls.x, y: ls.y, width: ls.width, height: ls.height }}
         transition={logoTransition}
-        style={{ position: "fixed", zIndex: 100, borderRadius: "22%" }}
-        className="overflow-hidden"
+        style={{ position: "fixed", zIndex: 100 }}
+        className="overflow-hidden text-ink"
         // P1: decorative — hidden from screen readers
         aria-hidden="true"
       >
-        <Image
-          src="/logo.png"
-          alt=""
-          // P3: 2× the display size for Retina sharpness
-          width={280}
-          height={280}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          priority
-        />
+        <Logo size={280} className="w-full h-full text-ink" />
       </motion.div>
 
       <AnimatePresence>
@@ -292,7 +276,7 @@ export default function LoginPage() {
             className="flex h-[100dvh] w-full"
           >
             {/* Left column */}
-            <div className="w-full lg:w-[420px] shrink-0 flex flex-col h-full bg-[#0d0d0d] z-20 border-r border-[#1a1d24] px-10 py-7">
+            <div className="w-full lg:w-[420px] shrink-0 flex flex-col h-full bg-bg z-20 border-r border-hairline px-10 py-7">
 
               {/* Logo spacer + brand text */}
               <div className="flex items-center gap-3" style={{ minHeight: 66 }}>
@@ -305,8 +289,8 @@ export default function LoginPage() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={reduceMotion ? { duration: 0 } : { duration: 0.4, ease: "easeOut", delay: 0.55 }}
                     >
-                      <p className="font-bold text-white text-4xl tracking-tight leading-none">Vaulty</p>
-                      <p className="text-[#6b7280] text-[10px] tracking-widest uppercase mt-2">
+                      <p className="font-semibold text-ink text-4xl tracking-tight leading-none">Vaulty</p>
+                      <p className="text-ink-faint text-[10px] font-mono tracking-widest uppercase mt-2">
                         {t("Personal Finance")}
                       </p>
                     </motion.div>
@@ -323,10 +307,10 @@ export default function LoginPage() {
                 transition={reduceMotion ? { duration: 0 } : { duration: 0.55, ease: "easeOut", delay: 0.35 }}
               >
                 {/* P1: h1 is the page title */}
-                <h1 className="text-4xl font-bold text-white tracking-tight mb-1">
+                <h1 className="text-4xl font-semibold text-ink tracking-tight mb-1">
                   {t("Welcome back")}
                 </h1>
-                <p className="text-sm text-[#6b7280] mb-6">
+                <p className="text-sm text-ink-muted mb-6">
                   {t("Sign in to your account to continue")}
                 </p>
 
@@ -340,7 +324,7 @@ export default function LoginPage() {
                   <div className="space-y-1.5">
                     <label
                       htmlFor="email"
-                      className="block text-[11px] font-semibold text-[#9ca3af] tracking-widest uppercase"
+                      className="block text-[11px] font-semibold text-ink-muted tracking-widest uppercase"
                     >
                       Email
                     </label>
@@ -358,7 +342,7 @@ export default function LoginPage() {
                       aria-describedby={error ? "login-error" : undefined}
                       aria-invalid={error ? "true" : undefined}
                       // P2: py-3 ensures min 44px height
-                      className="block w-full px-4 py-3 text-sm text-white bg-[#111318] border border-[#252830] rounded-xl placeholder-[#363a44] transition-all focus:outline-none focus:ring-1 focus:ring-[#00FFA3] focus:border-[#00FFA3] disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="block w-full px-4 py-3 text-sm text-ink bg-surface border border-hairline rounded-lg placeholder-ink-faint transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-40 disabled:cursor-not-allowed"
                       placeholder={t("username@email.com")}
                     />
                   </div>
@@ -366,7 +350,7 @@ export default function LoginPage() {
                   <div className="space-y-1.5">
                     <label
                       htmlFor="password"
-                      className="block text-[11px] font-semibold text-[#9ca3af] tracking-widest uppercase"
+                      className="block text-[11px] font-semibold text-ink-muted tracking-widest uppercase"
                     >
                       Password
                     </label>
@@ -382,7 +366,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                         aria-required="true"
                         aria-invalid={error ? "true" : undefined}
-                        className="block w-full px-4 py-3 pr-14 text-sm text-white bg-[#111318] border border-[#252830] rounded-xl placeholder-[#363a44] transition-all focus:outline-none focus:ring-1 focus:ring-[#00FFA3] focus:border-[#00FFA3] disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="block w-full px-4 py-3 pr-14 text-sm text-ink bg-surface border border-hairline rounded-lg placeholder-ink-faint transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-40 disabled:cursor-not-allowed"
                         placeholder="••••••••"
                       />
                       {/* P2: 44×44 touch target for eye icon */}
@@ -392,7 +376,7 @@ export default function LoginPage() {
                         // P1: descriptive aria-label
                         aria-label={showPassword ? t("Hide password") : t("Show password")}
                         aria-pressed={showPassword}
-                        className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-[#6b7280] hover:text-white transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] rounded-r-xl"
+                        className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-ink-muted hover:text-ink transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-r-lg"
                       >
                         {showPassword
                           ? <EyeOff size={16} aria-hidden="true" />
@@ -411,10 +395,10 @@ export default function LoginPage() {
                       initial={{ opacity: 0, y: reduceMotion ? 0 : -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                      className="flex items-center gap-2.5 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"
+                      className="flex items-center gap-2.5 bg-negative/10 border border-negative/20 rounded-lg px-4 py-3"
                     >
-                      <AlertCircle size={13} className="shrink-0 text-red-400" aria-hidden="true" />
-                      <p className="text-xs font-medium text-red-400">{error}</p>
+                      <AlertCircle size={13} className="shrink-0 text-negative" aria-hidden="true" />
+                      <p className="text-xs font-medium text-negative">{error}</p>
                     </motion.div>
                   )}
 
@@ -424,7 +408,7 @@ export default function LoginPage() {
                     disabled={isLoading || !email || !password}
                     aria-busy={isLoading}
                     // P2: active:scale feedback
-                    className="w-full flex items-center justify-center gap-2 bg-[#00FFA3] hover:bg-[#00ffb3] active:bg-[#00cc82] active:scale-[0.98] text-[#0d0d0d] py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#00FFA3] focus:ring-offset-2 focus:ring-offset-[#0d0d0d]"
+                    className="w-full flex items-center justify-center gap-2 bg-accent hover:brightness-110 active:brightness-95 active:scale-[0.98] text-accent-contrast py-3 rounded-lg text-sm font-semibold tracking-wide transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
                   >
                     {isLoading
                       ? <><Loader2 size={15} className="animate-spin" aria-hidden="true" />{t("Signing in...")}</>
@@ -434,11 +418,11 @@ export default function LoginPage() {
                 </form>
 
                 {/* Register link */}
-                <p className="text-xs text-[#6b7280] text-center mt-5">
+                <p className="text-xs text-ink-muted text-center mt-5">
                   {t("Don't have an account?")}{" "}
                   <Link
                     href="/register"
-                    className="font-bold text-white hover:text-[#00FFA3] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA3] rounded"
+                    className="font-semibold text-ink hover:text-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                   >
                     {t("Sign up")}
                   </Link>
@@ -446,35 +430,31 @@ export default function LoginPage() {
 
                 {/* Language selector */}
                 <div className="flex items-center justify-center gap-1.5 mt-4">
-                  <Globe size={12} className="text-[#6b7280]" aria-hidden="true" />
+                  <Globe size={12} className="text-ink-faint" aria-hidden="true" />
                   <select
                     value={lang}
                     onChange={(e) => setLang(e.target.value as "en" | "it")}
                     aria-label={t("Select language")}
-                    className="bg-transparent px-2 py-1.5 text-sm text-[#9ca3af] border-0 cursor-pointer focus:outline-none appearance-none transition-colors hover:text-white"
+                    className="bg-transparent px-2 py-1.5 text-sm text-ink-muted border-0 cursor-pointer focus:outline-none appearance-none transition-colors hover:text-ink"
                   >
-                    <option value="en" className="bg-[#1a1d24] text-white">English</option>
-                    <option value="it" className="bg-[#1a1d24] text-white">Italiano</option>
+                    <option value="en" className="bg-surface text-ink">English</option>
+                    <option value="it" className="bg-surface text-ink">Italiano</option>
                   </select>
                 </div>
               </motion.div>
 
               <div className="flex-1" />
-              <p className="text-[10px] text-[#252830] text-center tracking-wide">
+              <p className="text-[10px] text-ink-faint text-center tracking-wide">
                 © {new Date().getFullYear()} Vaulty
               </p>
             </div>
 
             {/* Right column */}
             <div
-              className="hidden lg:flex flex-1 h-full bg-[#080a0d] relative overflow-hidden px-10 py-8"
+              className="hidden lg:flex flex-1 h-full bg-surface-sunken relative overflow-hidden px-10 py-8 border-l border-hairline"
               // P1: decorative, not part of main content flow
               aria-hidden="true"
             >
-              <div
-                className="absolute bottom-0 right-0 w-[75vh] h-[50vh] opacity-10 blur-3xl pointer-events-none"
-                style={{ background: "radial-gradient(ellipse at bottom right, #00FFA3, transparent 70%)" }}
-              />
               <motion.div
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -499,10 +479,10 @@ export default function LoginPage() {
             initial={{ opacity: 0, scale: reduceMotion ? 1 : 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: "easeOut" }}
-            className="fixed inset-0 bg-[#0d0d0d] z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-bg z-50 flex items-center justify-center"
             aria-hidden="true"
           >
-            <Loader2 size={28} className="animate-spin text-[#00FFA3]" />
+            <Loader2 size={28} className="animate-spin text-accent" />
           </motion.div>
         )}
       </AnimatePresence>

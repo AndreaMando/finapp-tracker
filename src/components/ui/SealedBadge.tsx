@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface SealedBadgeProps {
   label: string;
@@ -8,26 +8,28 @@ interface SealedBadgeProps {
 }
 
 /**
- * "Sealed/verified" motif for completion states — a small mint BadgeCheck
- * tile paired with a label. Shared by completed savings goals and applied
+ * "Sealed/verified" motif for completion states — a rotated ink-stamp disc
+ * (double ring, slightly off-kilter, like something pressed onto a ledger
+ * page) paired with a label. Shared by completed savings goals and applied
  * recurring expenses so "this is done and locked in" reads as one
- * deliberate brand moment across the app instead of plain colored text.
- * Uses only existing mint tokens (#00FFA3 / #00FFA315), no new color.
+ * deliberate brand moment tied to the ledger direction, not a generic
+ * rounded-pill "verified" chip. Uses only existing accent tokens.
  */
 export function SealedBadge({ label, className = "" }: SealedBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full align-middle ${className}`}
-      style={{ backgroundColor: "#00FFA315" }}
+      className={`inline-flex items-center gap-2 align-middle ${className}`}
     >
       <span
-        className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-        style={{ backgroundColor: "#00FFA3" }}
+        className="relative w-5 h-5 shrink-0 flex items-center justify-center rounded-full border-[1.5px] border-accent text-accent -rotate-[10deg]"
+        style={{ boxShadow: "inset 0 0 0 2px transparent, inset 0 0 0 3px currentColor" }}
         aria-hidden="true"
       >
-        <BadgeCheck size={11} color="#0d0d0d" strokeWidth={2.5} />
+        {/* double ring: outer border above, a slightly inset second ring below */}
+        <span className="absolute inset-[2.5px] rounded-full border border-accent/70" />
+        <Check size={10} strokeWidth={3} className="relative" />
       </span>
-      <span className="text-[11px] font-semibold leading-none" style={{ color: "#00FFA3" }}>
+      <span className="text-[11px] font-mono font-semibold uppercase tracking-wide leading-none text-accent -rotate-[2deg]">
         {label}
       </span>
     </span>
