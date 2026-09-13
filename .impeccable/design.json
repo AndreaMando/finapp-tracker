@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-14T00:00:00Z",
+  "title": "Design System: Vaulty",
+  "extensions": {
+    "colorMeta": {
+      "accent-light": { "role": "primary", "displayName": "Ledger Emerald", "canonical": "#1f6f52" },
+      "accent-dark": { "role": "primary", "displayName": "Ledger Emerald (dark)", "canonical": "#3fae82" },
+      "negative-light": { "role": "secondary", "displayName": "Ledger Brick", "canonical": "#b3402b" },
+      "negative-dark": { "role": "secondary", "displayName": "Ledger Brick (dark)", "canonical": "#d9694c" },
+      "goal-light": { "role": "secondary", "displayName": "Ledger Violet", "canonical": "#5c5296" },
+      "goal-dark": { "role": "secondary", "displayName": "Ledger Violet (dark)", "canonical": "#8f86d9" },
+      "bg-light": { "role": "neutral", "displayName": "Page", "canonical": "#f7f5f1" },
+      "bg-dark": { "role": "neutral", "displayName": "Page (dark)", "canonical": "#15130f" },
+      "surface-light": { "role": "neutral", "displayName": "Surface", "canonical": "#fffefc" },
+      "surface-dark": { "role": "neutral", "displayName": "Surface (dark)", "canonical": "#1c1a15" },
+      "surface-sunken-light": { "role": "neutral", "displayName": "Surface Sunken", "canonical": "#f0ecE4" },
+      "surface-sunken-dark": { "role": "neutral", "displayName": "Surface Sunken (dark)", "canonical": "#100f0c" },
+      "ink-light": { "role": "neutral", "displayName": "Ink", "canonical": "#17140f" },
+      "ink-dark": { "role": "neutral", "displayName": "Ink (dark)", "canonical": "#f2efe7" },
+      "hairline-light": { "role": "neutral", "displayName": "Hairline", "canonical": "#e1dcd1" },
+      "hairline-dark": { "role": "neutral", "displayName": "Hairline (dark)", "canonical": "#322d24" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Figure", "purpose": "Net Savings figure on the dashboard only." },
+      "figure": { "displayName": "Ledger Figure", "purpose": "Any currency amount or percentage, always tabular-nums, always JetBrains Mono." },
+      "label": { "displayName": "Ledger Column Label", "purpose": "Uppercase micro-headings for sections, form fields, and dropdown groups." }
+    },
+    "shadows": [
+      { "name": "overlay", "value": "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)", "purpose": "Modal, ConfirmDialog, and settings-dropdown overlays only; never used on in-page cards." }
+    ],
+    "motion": [
+      { "name": "count-up", "value": "custom useCountUp hook, respects prefers-reduced-motion", "purpose": "Animates monetary/percentage figures from 0 (or prior value) to target on first paint or month change." },
+      { "name": "month-scrub-snap", "value": "transform 220ms ease-out", "purpose": "MonthScrub label settles back after a drag/swipe resolves." },
+      { "name": "slide-to-apply-fill", "value": "transform 200ms ease-out (scaleX, transform-origin: left)", "purpose": "Gather-fill behind the SlideToApply handle; compositor-only, avoids width-based reflow." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Accent-filled action button used for primary submits and creation actions.",
+      "html": "<button class=\"ds-btn-primary\">Save Income</button>",
+      "css": ".ds-btn-primary { background: #1f6f52; color: #fffefc; padding: 12px 16px; border-radius: 8px; border: none; font-family: 'Public Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #1f6f52; outline-offset: 2px; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Tinted (not solid) red action for delete/destructive confirmations.",
+      "html": "<button class=\"ds-btn-destructive\">Delete</button>",
+      "css": ".ds-btn-destructive { background: rgba(179,64,43,0.1); color: #b3402b; padding: 10px 16px; border-radius: 8px; border: none; font-family: 'Public Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; } .ds-btn-destructive:hover { background: rgba(179,64,43,0.2); } .ds-btn-destructive:active { transform: scale(0.98); } .ds-btn-destructive:focus-visible { outline: 2px solid #b3402b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Recessed text field used across all forms (income, goals, contributions).",
+      "html": "<label class=\"ds-label\" for=\"ds-amount\">Amount (€)</label><input id=\"ds-amount\" class=\"ds-input\" type=\"number\" placeholder=\"e.g. 2500.00\" />",
+      "css": ".ds-label { display:block; font-family:'JetBrains Mono', ui-monospace, monospace; font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#948d7c; margin-bottom:6px; } .ds-input { display:block; width:100%; padding:12px 16px; font-family:'JetBrains Mono', ui-monospace, monospace; font-size:0.875rem; font-variant-numeric: tabular-nums; color:#17140f; background:#f0ecE4; border:1px solid #e1dcd1; border-radius:8px; } .ds-input:focus { outline:none; box-shadow: 0 0 0 1px #1f6f52; border-color:#1f6f52; }"
+    },
+    {
+      "name": "Sealed Badge",
+      "kind": "custom",
+      "refersTo": "sealed-badge",
+      "description": "Rotated ink-stamp completion motif for finished goals / applied recurring items.",
+      "html": "<span class=\"ds-sealed\"><span class=\"ds-sealed-ring\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"><polyline points=\"20 6 9 17 4 12\"/></svg></span><span class=\"ds-sealed-label\">Completed</span></span>",
+      "css": ".ds-sealed { display:inline-flex; align-items:center; gap:8px; } .ds-sealed-ring { position:relative; width:20px; height:20px; display:flex; align-items:center; justify-content:center; border-radius:9999px; border:1.5px solid #1f6f52; color:#1f6f52; transform: rotate(-10deg); box-shadow: inset 0 0 0 3px currentColor; } .ds-sealed-label { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#1f6f52; transform: rotate(-2deg); }"
+    },
+    {
+      "name": "Slide To Apply",
+      "kind": "custom",
+      "refersTo": "slide-to-apply",
+      "description": "Pill-shaped slide-to-confirm gesture control for the monthly recurring-expense apply ritual; also a real clickable button.",
+      "html": "<div class=\"ds-slide-track\"><div class=\"ds-slide-fill\"></div><span class=\"ds-slide-label\">Apply 3 expenses</span><button class=\"ds-slide-handle\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"9 18 15 12 9 6\"/></svg></button></div>",
+      "css": ".ds-slide-track { position:relative; width:100%; height:56px; border-radius:9999px; border:1px solid #e1dcd1; background:#f0ecE4; overflow:hidden; } .ds-slide-fill { position:absolute; inset:0; width:100%; transform-origin:left; transform:scaleX(0.15); background:rgba(31,111,82,0.25); transition: transform 0.2s ease-out; } .ds-slide-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Public Sans', sans-serif; font-size:0.875rem; font-weight:600; color:#17140f; pointer-events:none; } .ds-slide-handle { position:absolute; top:6px; left:6px; width:44px; height:44px; border-radius:9999px; border:none; background:#1f6f52; color:#fffefc; display:flex; align-items:center; justify-content:center; cursor:grab; } .ds-slide-handle:focus-visible { outline:2px solid #1f6f52; outline-offset:2px; }"
+    },
+    {
+      "name": "Month Scrub",
+      "kind": "nav",
+      "refersTo": "month-scrub",
+      "description": "Draggable/swipeable month navigator with always-available chevron fallback.",
+      "html": "<div class=\"ds-scrub\"><button class=\"ds-scrub-btn\" aria-label=\"Previous month\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"15 18 9 12 15 6\"/></svg></button><div class=\"ds-scrub-label\">September 2026</div><button class=\"ds-scrub-btn\" aria-label=\"Next month\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"9 18 15 12 9 6\"/></svg></button></div>",
+      "css": ".ds-scrub { display:flex; align-items:stretch; min-width:320px; background:#fffefc; border:1px solid #e1dcd1; border-radius:8px; overflow:hidden; } .ds-scrub-btn { display:flex; align-items:center; justify-content:center; width:56px; border:none; background:transparent; color:#6b6558; cursor:pointer; } .ds-scrub-btn:hover { background:#f0ecE4; color:#17140f; } .ds-scrub-label { flex:1; display:flex; align-items:center; justify-content:center; border-left:1px solid #e1dcd1; border-right:1px solid #e1dcd1; padding:12px 16px; font-family:'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight:600; font-size:1rem; color:#17140f; cursor:grab; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Newsprint Financial Page",
+    "overview": "Vaulty reads each month like one page of the user's own printed financial ledger or bank statement, not a row of side-by-side app-menu cards. The ground is a warm-cool drifting off-white in light mode and a warm near-black in dark mode — deliberately never flat white or pure black, so the surface always reads as paper or stock rather than a screen default. One restrained deep-emerald accent carries positive figures and all primary actions; a muted brick-red carries negative figures and destructive actions; a violet is reserved for goal-related figures. Hairline rules divide every section the way a printed statement divides its line items. Rendering is flat throughout: no gradients, no drop shadows for elevation, no neon glow — a direct rejection of the prior dark-only, neon-adjacent look the product brief explicitly ruled out. Public Sans carries all UI, body, and display text — one quiet grotesk for everything. JetBrains Mono is reserved specifically for currency figures and date/category micro-labels, echoing a ledger column's monospace alignment; every mono figure carries tabular numerals so amounts align vertically as they change.",
+    "keyCharacteristics": [
+      "Warm off-white / warm near-black grounds, never pure white or pure black.",
+      "One accent (emerald) for positive/primary, one for negative (brick-red), one for goals (violet) — no other saturated color enters the UI except the eight user-chosen savings-goal swatches.",
+      "Hairline dividers instead of card shadows to separate sections.",
+      "Public Sans for everything textual; JetBrains Mono strictly for figures and micro-labels, always tabular.",
+      "Flat, no-gradient rendering; the only \"elevation\" is a modal/dialog drop shadow."
+    ],
+    "rules": [
+      { "name": "The Hairline-Not-Shadow Rule", "body": "Sections and list rows are separated by a 1px hairline (--hairline), never a card shadow. The only shadow in the system (shadow-lg) is reserved for floating overlays (Modal, ConfirmDialog, settings dropdown) that must visually detach from the page.", "section": "colors" },
+      { "name": "The One Warm Ground Rule", "body": "--bg, --surface, and --surface-sunken are always warm-tinted, never pure white/black/gray. This is a direct, evidenced rejection of a neon-on-pure-black look.", "section": "colors" },
+      { "name": "The Mono-Is-Data Rule", "body": "font-mono (JetBrains Mono) is applied only to currency figures, dates, month keys, and short uppercase micro-labels — never to headings, body copy, or paragraph text. If it isn't a ledger figure or column label, it isn't mono.", "section": "colors" },
+      { "name": "The Tabular-Nums-Everywhere Rule", "body": "Any element carrying font-mono also carries tabular-nums, so digits never shift width as counted-up figures animate or as list values update.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces at rest never carry a shadow. A shadow appears only when an element floats above the document (modal, dialog, dropdown), never as generic card styling.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep every monetary figure in JetBrains Mono with tabular numerals, regardless of which page it appears on.",
+      "Do use hairline dividers (border-hairline, divide-hairline) to separate sections and list rows instead of card shadows or extra background changes.",
+      "Do reserve shadow-lg for floating overlays only (Modal, ConfirmDialog, dropdown menus).",
+      "Do make every signature gesture (month-scrub drag, slide-to-apply) additive to a plain click/keyboard path — never the only way to complete the action.",
+      "Do keep destructive actions in the tinted bg-negative/10 text-negative treatment, not a solid red fill."
+    ],
+    "donts": [
+      "Don't introduce a gradient or a drop-shadow-as-elevation anywhere; the system is flat by design (a direct rejection of the prior neon/dark-only look the product brief ruled out).",
+      "Don't use pure white, pure black, or a cool/neutral gray for bg/surface/surface-sunken — the warm drift is load-bearing to the \"printed page\" identity.",
+      "Don't apply JetBrains Mono to headings, paragraphs, or navigation labels — it is reserved for figures, dates, and uppercase micro-labels only.",
+      "Don't rebuild the Modal/ConfirmDialog forms as inline in-place editing. This was explicitly proposed and explicitly declined by the user during this build (restyle-only, keep as modals) — treat it as a binding decision, not an unresolved gap.",
+      "Don't treat the SealedBadge ink-stamp or the Goal Illustration postcard band as general-purpose decorative devices for future surfaces; both are reserved for the specific states/surface documented above."
+    ]
+  }
+}

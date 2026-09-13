@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       const id: string = it.id;
       const overrideAmount = typeof it.amount === "number" ? it.amount : undefined;
       const r = recurrings.find((x: any) => x.id === id);
-      if (!r) continue;
+      if (!r || !r.active) continue;
 
       // idempotency: skip if already exists
       const exists = await db.select().from(oneTimeExpenses).where(and(eq(oneTimeExpenses.sourceRecurringId, id), eq(oneTimeExpenses.monthKey, monthKey))).limit(1);

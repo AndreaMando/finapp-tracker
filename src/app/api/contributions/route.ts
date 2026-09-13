@@ -4,9 +4,13 @@ import { goalContributions, savingsGoals } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, sql } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const goalId = url.searchParams.get("goalId");
+  const monthKey = url.searchParams.get("monthKey");
 
   const userGoals = await db.query.savingsGoals.findMany({
     where: eq(savingsGoals.userId, session.user.id),
@@ -14,8 +18,10 @@ export async function GET() {
         contributions: true
     }
   });
-  
-  const allContributions = userGoals.flatMap(g => g.contributions);
+
+  let allContributions = userGoals.flatMap(g => g.contributions);
+  if (goalId) allContributions = allContributions.filter((c) => c.goalId === goalId);
+  if (monthKey) allContributions = allContributions.filter((c) => c.monthKey === monthKey);
   return NextResponse.json(allContributions);
 }
 

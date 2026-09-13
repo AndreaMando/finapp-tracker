@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     const appliedSet = new Set((applied || []).map((a) => a.sourceRecurringId).filter(Boolean));
 
     const preview = recurrings
-      .filter((r) => r.startMonth <= monthKey && (!r.endMonth || r.endMonth >= monthKey))
+      .filter((r) => r.active && r.startMonth <= monthKey && (!r.endMonth || r.endMonth >= monthKey))
       .map((r) => {
         const list = (map[r.id] || []).filter((a) => a.effectiveMonth <= monthKey);
         let amount = r.amount;

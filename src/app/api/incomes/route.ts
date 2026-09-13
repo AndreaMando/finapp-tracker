@@ -4,11 +4,18 @@ import { incomes } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const data = await db.select().from(incomes).where(eq(incomes.userId, session.user.id));
+  const url = new URL(req.url);
+  const monthKey = url.searchParams.get("monthKey");
+
+  const data = await db.select().from(incomes).where(
+    monthKey
+      ? and(eq(incomes.userId, session.user.id), eq(incomes.monthKey, monthKey))
+      : eq(incomes.userId, session.user.id)
+  );
   return NextResponse.json(data);
 }
 

@@ -1,0 +1,14 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Static-color favicon twin of src/components/Logo.tsx (browser icons can't
+       read CSS custom properties/Tailwind tokens, so the light-theme accent
+       and a white cutout are hardcoded here instead of currentColor/tokens). -->
+  <rect x="0" y="0" width="40" height="40" rx="9" fill="#1f6f52" />
+  <mask id="vaulty-favicon-keyhole-mask">
+    <rect width="40" height="40" fill="white" />
+    <circle cx="20" cy="16.5" r="5.4" fill="black" />
+    <path d="M16.6 19.5 L23.4 19.5 L21.3 28 L18.7 28 Z" fill="black" />
+  </mask>
+  <rect x="0" y="0" width="40" height="40" rx="9" fill="#fffefc" mask="url(#vaulty-favicon-keyhole-mask)" />
+  <circle cx="29" cy="10" r="5.5" fill="#fffefc" stroke="#1f6f52" stroke-width="1.6" />
+  <line x1="26.6" y1="10" x2="31.4" y2="10" stroke="#1f6f52" stroke-width="1.4" stroke-linecap="round" />
+</svg>
