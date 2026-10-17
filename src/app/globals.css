@@ -96,6 +96,37 @@ body {
   background: transparent;
 }
 
+/* Touch devices: iOS/iPadOS Safari zooms the whole page when a focused field
+   has a font-size under 16px, and the page stays zoomed afterwards — which is
+   what pushed the top navbar out of view on tablets. Keep fields at 16px there. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Native date/month pickers on iOS/Android size themselves to their content and
+   ignore width: 100%, so they poke out of the form. Strip the native chrome so
+   they obey the same box as every other input. */
+input[type="date"],
+input[type="month"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 2.875rem;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
+
 /* Tabular numerals everywhere a figure appears — ledger-column authenticity. */
 .tabular-nums,
 .font-mono {

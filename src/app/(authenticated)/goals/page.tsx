@@ -707,14 +707,14 @@ export default function GoalsPage() {
     <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">{t("Savings Goals")}</h1>
           <p className="text-sm text-ink-muted mt-0.5">{t("Track your financial targets")}</p>
         </div>
         <button
           onClick={() => setShowNewGoal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold bg-accent hover:opacity-90 active:scale-[0.98] text-accent-contrast transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold bg-accent hover:opacity-90 active:scale-[0.98] text-accent-contrast transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
         >
           <Plus size={16} aria-hidden="true" />
           {t("New Goal")}

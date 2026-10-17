@@ -60,9 +60,9 @@ export function Modal({ title, onClose, children, containerClassName }: ModalPro
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`bg-surface border border-hairline rounded-lg shadow-lg w-full mx-4 sm:mx-auto ${containerClassName ?? "max-w-lg"} overflow-hidden`}
+        className={`bg-surface border border-hairline rounded-lg shadow-lg w-full mx-4 sm:mx-auto ${containerClassName ?? "max-w-lg"} overflow-hidden flex flex-col max-h-[calc(100dvh-2rem)]`}
       >
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0">
           <h2 id="modal-title" className="text-lg font-semibold text-ink">{title}</h2>
           <button
             ref={closeRef}
@@ -73,8 +73,8 @@ export function Modal({ title, onClose, children, containerClassName }: ModalPro
             <X size={20} />
           </button>
         </div>
-        <div className="border-t border-hairline" />
-        <div className="px-6 py-5">{children}</div>
+        <div className="border-t border-hairline shrink-0" />
+        <div className="px-6 py-5 overflow-y-auto min-h-0">{children}</div>
       </div>
     </div>
   );
