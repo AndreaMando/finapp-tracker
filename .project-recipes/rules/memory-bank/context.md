@@ -27,6 +27,7 @@ FinApp Tracker uses Next.js 16, React 19, Tailwind CSS 4, NextAuth, and Drizzle 
 | `src/app/(authenticated)/expenses/page.tsx` | One-time expense tracking | ✅ Ready |
 | `src/app/(authenticated)/recurring/page.tsx` | Recurring expense management | ✅ Ready |
 | `src/app/(authenticated)/goals/page.tsx` | Savings goals with contributions | ✅ Ready |
+| `src/app/(authenticated)/analytics/page.tsx` | Analytics: period presets (1/3/6/12 months, calendar year), income/expense columns, category donut, goal contributions. Reached only from a dashboard button, not the navbar. Aggregates client-side from `getIncomes`/`getOneTimeExpenses`/`getGoalContributions`/`getSavingsGoals` | 🟡 Local, awaiting approval |
 | `src/db/schema.ts` | Drizzle Postgres schema, including auth and finance tables | ✅ Ready |
 | `src/db/index.ts` | Neon/Postgres Drizzle client | ✅ Ready |
 | `src/lib/auth.ts` | NextAuth configuration with credential provider | ✅ Ready |

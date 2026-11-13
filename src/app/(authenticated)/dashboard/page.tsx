@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight, BarChart3 } from "lucide-react";
 import {
   currentMonthKey,
   formatMonthKey,
@@ -509,17 +509,26 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-ink tracking-tight">{t("Dashboard")}</h1>
             <p className="text-sm text-ink-muted mt-0.5">{t("Your monthly financial overview")}</p>
           </div>
-          <MonthScrub
-            label={formatMonthKey(monthKey, locale)}
-            onPrev={() => setMonthKey(addMonths(monthKey, -1))}
-            onNext={() => setMonthKey(addMonths(monthKey, 1))}
-            onScrub={(delta) => setMonthKey(addMonths(monthKey, delta))}
-            groupLabel={t("Month navigation")}
-            prevLabel={t("Previous month")}
-            nextLabel={t("Next month")}
-            scrubHint={t("Drag or use arrow keys to change month")}
-            reduceMotion={reduceMotion}
-          />
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-3">
+            <Link
+              href="/analytics"
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold text-ink bg-surface border border-hairline transition-all duration-150 hover:bg-surface-sunken active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <BarChart3 size={16} aria-hidden="true" />
+              {t("Analytics")}
+            </Link>
+            <MonthScrub
+              label={formatMonthKey(monthKey, locale)}
+              onPrev={() => setMonthKey(addMonths(monthKey, -1))}
+              onNext={() => setMonthKey(addMonths(monthKey, 1))}
+              onScrub={(delta) => setMonthKey(addMonths(monthKey, delta))}
+              groupLabel={t("Month navigation")}
+              prevLabel={t("Previous month")}
+              nextLabel={t("Next month")}
+              scrubHint={t("Drag or use arrow keys to change month")}
+              reduceMotion={reduceMotion}
+            />
+          </div>
         </section>
 
         {loading ? (
