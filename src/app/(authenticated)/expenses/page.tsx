@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useReducedMotion, AnimatePresence } from "framer-motion";
 import {
   Plus, Pencil, Trash2, ShoppingBag, ChevronLeft, ChevronRight,
-  RefreshCw, Archive, RotateCw,
+  RefreshCw, Archive, RotateCw, CalendarClock, CheckCircle2,
 } from "lucide-react";
 import {
   currentMonthKey,
@@ -19,9 +19,19 @@ import {
   addRecurringExpense,
   updateRecurringExpense,
   deleteRecurringExpense,
+  getInstallmentPlans,
+  addInstallmentPlan,
+  deleteInstallmentPlan,
   type OneTimeExpense,
   type RecurringExpense,
+  type InstallmentPlan,
 } from "@/lib/store";
+import {
+  MIN_INSTALLMENTS,
+  MAX_INSTALLMENTS,
+  installmentSlot,
+  dueInstallmentCount,
+} from "@/lib/installment-math";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -719,54 +729,95 @@ function RecurringExpenseForm({ existing, onSave, onClose }: RecurringFormProps)
 }
 
 // ─────────────────────────────────────────────
-// Unified add form — the single "Add Expense" entry point for both kinds.
-// Shares Description / Amount / Category; the last field is one UI slot that
-// doubles as either the one-time expense's date or the recurring expense's
-// start month, switched by the "Make recurring" checkbox beside it. This is
-// ADD-only: editing an existing one-time or recurring expense still goes
-// through the two dedicated forms above, which keep fields (Apply modification
-// from, end month, etc.) that don't cleanly fit a shared add form.
+// Unified add form — the single "Add Expense" entry point for all three kinds.
+// Shares Description / Amount / Category; a three-state selector (one-time /
+// recurring / installment payment) decides what the last field(s) mean:
+//   · one-time    → the expense's date
+//   · recurring   → the start month
+//   · installment → the start date (first installment's due day) plus the
+//                   number of installments; the amount is ONE installment.
+// This is ADD-only: editing an existing one-time or recurring expense still
+// goes through the two dedicated forms above, which keep fields (Apply
+// modification from, end month, etc.) that don't cleanly fit a shared add form.
 // ─────────────────────────────────────────────
+type ExpenseKind = "one-time" | "recurring" | "installments";
+
 interface UnifiedAddFormProps {
-  onSave: (kind: "one-time" | "recurring") => void;
+  onSave: (kind: ExpenseKind) => void;
   onClose: () => void;
 }
 
 function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
-  const { t } = useTranslation();
-  const today = new Date().toISOString().split("T")[0];
+  const { t, lang } = useTranslation();
+  const locale = lang === "it" ? "it-IT" : "en-US";
+  // Local calendar day (toISOString would give the UTC day, which is yesterday
+  // for a few hours after local midnight east of Greenwich).
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const todayMonthKey = currentMonthKey();
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [isRecurring, setIsRecurring] = useState(false);
+  const [kind, setKind] = useState<ExpenseKind>("one-time");
   const [category, setCategory] = useState(ONE_TIME_CATEGORIES[0]);
   const [date, setDate] = useState(today);
   const [startMonth, setStartMonth] = useState(todayMonthKey);
+  const [installments, setInstallments] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
+  const installmentsRef = useRef<HTMLInputElement>(null);
 
+  const isRecurring = kind === "recurring";
+  const isInstallments = kind === "installments";
   const categories = isRecurring ? RECURRING_CATEGORIES : ONE_TIME_CATEGORIES;
 
-  function handleRecurringToggle(checked: boolean) {
-    setIsRecurring(checked);
-    const list = checked ? RECURRING_CATEGORIES : ONE_TIME_CATEGORIES;
+  const KINDS: Array<{ id: ExpenseKind; label: string }> = [
+    { id: "one-time", label: t("One-time") },
+    { id: "recurring", label: t("Make recurring") },
+    { id: "installments", label: t("Installment payment") },
+  ];
+
+  function handleKindChange(next: ExpenseKind) {
+    setKind(next);
+    const list = next === "recurring" ? RECURRING_CATEGORIES : ONE_TIME_CATEGORIES;
     if (!list.includes(category)) setCategory(list[0]);
-    setErrors((p) => ({ ...p, date: "", startMonth: "" }));
+    setErrors((p) => ({ ...p, date: "", startMonth: "", installments: "" }));
+  }
+
+  const parsedAmount = parseFloat(amount);
+  const parsedInstallments = Number(installments);
+  const installmentsValid =
+    installments.trim() !== "" &&
+    Number.isInteger(parsedInstallments) &&
+    parsedInstallments >= MIN_INSTALLMENTS &&
+    parsedInstallments <= MAX_INSTALLMENTS;
+
+  // Live summary under the installment fields: "12 × 50,00 € = 600,00 € · Last installment: March 2027"
+  let installmentSummary = "";
+  if (isInstallments && installmentsValid && !isNaN(parsedAmount) && parsedAmount > 0 && date) {
+    try {
+      const last = installmentSlot(date, parsedInstallments);
+      installmentSummary = `${parsedInstallments} × ${formatCurrency(parsedAmount)} = ${formatCurrency(
+        parsedAmount * parsedInstallments
+      )} · ${t("Last installment:")} ${formatMonthKey(last.monthKey, locale)}`;
+    } catch {
+      installmentSummary = "";
+    }
   }
 
   function validate() {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = t("Name is required.");
-    const parsed = parseFloat(amount);
-    if (isNaN(parsed) || parsed <= 0) e.amount = t("Enter a valid amount.");
+    if (isNaN(parsedAmount) || parsedAmount <= 0) e.amount = t("Enter a valid amount.");
     if (isRecurring) {
       if (!startMonth) e.startMonth = t("Start month is required.");
     } else if (!date) {
       e.date = t("Date is required.");
     }
+    if (isInstallments && !installmentsValid) e.installments = t("Enter a valid number of installments (2-360).");
     return e;
   }
 
@@ -777,21 +828,33 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
       setErrors(errs);
       if (errs.name) { nameRef.current?.focus(); return; }
       if (errs.amount) { amountRef.current?.focus(); return; }
+      if (errs.installments && !errs.date) { installmentsRef.current?.focus(); return; }
       return;
     }
     setIsSubmitting(true);
-    const parsedAmount = parseFloat(amount);
-    if (isRecurring) {
-      await addRecurringExpense(name.trim(), parsedAmount, category, startMonth, null);
-    } else {
-      const dateObject = new Date(date);
-      const monthKeyFromDate = `${dateObject.getFullYear()}-${String(dateObject.getMonth() + 1).padStart(2, "0")}`;
-      await addOneTimeExpense(monthKeyFromDate, name.trim(), parsedAmount, category, dateObject);
+    setSubmitError("");
+    try {
+      if (isRecurring) {
+        await addRecurringExpense(name.trim(), parsedAmount, category, startMonth, null);
+      } else if (isInstallments) {
+        await addInstallmentPlan(name.trim(), parsedAmount, category, date, parsedInstallments);
+      } else {
+        const dateObject = new Date(date);
+        const monthKeyFromDate = `${dateObject.getFullYear()}-${String(dateObject.getMonth() + 1).padStart(2, "0")}`;
+        await addOneTimeExpense(monthKeyFromDate, name.trim(), parsedAmount, category, dateObject);
+      }
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+      setIsSubmitting(false);
+      return;
     }
     setIsSubmitting(false);
-    onSave(isRecurring ? "recurring" : "one-time");
+    onSave(kind);
     onClose();
   }
+
+  const dateInputClass = `block w-full min-w-0 px-4 py-3 text-sm font-mono text-ink bg-surface-sunken border border-hairline rounded-lg
+                       transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent cursor-pointer`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -860,22 +923,40 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
         </select>
       </div>
 
+      {/* Three-state selector: off (one-time) / recurring / installments. */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="unified-expense-date" className="block text-[11px] font-mono font-semibold text-ink-faint tracking-widest uppercase">
-            {isRecurring ? t("Start Month") : t("Date")} <span className="text-accent" aria-hidden="true">*</span>
-          </label>
-          <label htmlFor="unified-expense-recurring" className="flex items-center gap-1.5 text-xs font-medium text-ink-muted cursor-pointer select-none">
-            <input
-              id="unified-expense-recurring"
-              type="checkbox"
-              checked={isRecurring}
-              onChange={(e) => handleRecurringToggle(e.target.checked)}
-              className="w-4 h-4 rounded accent-accent cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            />
-            {t("Make recurring")}
-          </label>
+        <span id="unified-expense-kind-label" className="block text-[11px] font-mono font-semibold text-ink-faint tracking-widest uppercase">
+          {t("Expense type")}
+        </span>
+        <div
+          role="radiogroup"
+          aria-labelledby="unified-expense-kind-label"
+          className="flex bg-surface-sunken border border-hairline rounded-lg p-1 gap-1"
+        >
+          {KINDS.map((k) => {
+            const active = kind === k.id;
+            return (
+              <button
+                key={k.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => handleKindChange(k.id)}
+                className={`flex-1 px-1.5 py-2 text-xs font-medium leading-tight text-center rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                  active ? "bg-accent text-accent-contrast" : "text-ink-muted hover:text-ink"
+                }`}
+              >
+                {k.label}
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="unified-expense-date" className="block text-[11px] font-mono font-semibold text-ink-faint tracking-widest uppercase">
+          {isRecurring ? t("Start Month") : isInstallments ? t("Start date") : t("Date")} <span className="text-accent" aria-hidden="true">*</span>
+        </label>
         {isRecurring ? (
           <input
             id="unified-expense-date"
@@ -885,8 +966,7 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
             aria-required="true"
             aria-invalid={errors.startMonth ? "true" : undefined}
             aria-describedby={errors.startMonth ? "unified-expense-date-error" : undefined}
-            className="block w-full min-w-0 px-4 py-3 text-sm font-mono text-ink bg-surface-sunken border border-hairline rounded-lg
-                       transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent cursor-pointer capitalize"
+            className={`${dateInputClass} capitalize`}
           />
         ) : (
           <input
@@ -897,14 +977,47 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
             aria-required="true"
             aria-invalid={errors.date ? "true" : undefined}
             aria-describedby={errors.date ? "unified-expense-date-error" : undefined}
-            className="block w-full min-w-0 px-4 py-3 text-sm font-mono text-ink bg-surface-sunken border border-hairline rounded-lg
-                       transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent cursor-pointer"
+            className={dateInputClass}
           />
         )}
         {(errors.date || errors.startMonth) && (
           <p id="unified-expense-date-error" role="alert" className="text-[11px] text-negative mt-1">{errors.date || errors.startMonth}</p>
         )}
       </div>
+
+      {isInstallments && (
+        <div className="space-y-1.5">
+          <label htmlFor="unified-expense-installments" className="block text-[11px] font-mono font-semibold text-ink-faint tracking-widest uppercase">
+            {t("Number of installments")} <span className="text-accent" aria-hidden="true">*</span>
+          </label>
+          <input
+            ref={installmentsRef}
+            id="unified-expense-installments"
+            type="number"
+            inputMode="numeric"
+            step="1"
+            min={MIN_INSTALLMENTS}
+            max={MAX_INSTALLMENTS}
+            value={installments}
+            onChange={(e) => { setInstallments(e.target.value); setErrors((p) => ({ ...p, installments: "" })); }}
+            placeholder="12"
+            aria-required="true"
+            aria-invalid={errors.installments ? "true" : undefined}
+            aria-describedby={errors.installments ? "unified-expense-installments-error" : undefined}
+            className="block w-full min-w-0 px-4 py-3 text-sm font-mono tabular-nums text-ink bg-surface-sunken border border-hairline rounded-lg
+                       placeholder-ink-faint transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent
+                       [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:none]"
+          />
+          {errors.installments && (
+            <p id="unified-expense-installments-error" role="alert" className="text-[11px] text-negative mt-1">{errors.installments}</p>
+          )}
+          {installmentSummary && (
+            <p className="text-xs text-ink-muted font-mono tabular-nums mt-1" aria-live="polite">{installmentSummary}</p>
+          )}
+        </div>
+      )}
+
+      {submitError && <ErrorBanner message={submitError} />}
 
       <div className="flex gap-2 pt-2">
         <button
@@ -1019,6 +1132,94 @@ function RecurringRow({
   );
 }
 
+// ─────────────────────────────────────────────
+// Installment plan row — same flat, hairline-divided ledger row as the
+// recurring one. A finished plan stays in the list, dimmed and marked
+// "completed", the way applied recurring expenses read.
+// ─────────────────────────────────────────────
+function InstallmentRow({
+  plan, locale, upcoming, onDelete, t,
+}: {
+  plan: InstallmentPlan;
+  locale: string;
+  upcoming?: boolean;
+  onDelete: (id: string) => void;
+  t: (key: string) => string;
+}) {
+  const style = getOneTimeCategoryStyle(plan.category);
+  const completed = plan.generatedCount >= plan.totalInstallments;
+  const progress = Math.min(100, (plan.generatedCount / plan.totalInstallments) * 100);
+  const nextSlot = !completed ? installmentSlot(plan.startDate, plan.generatedCount + 1) : null;
+  const lastSlot = installmentSlot(plan.startDate, plan.totalInstallments);
+
+  return (
+    <div className={`flex items-center justify-between gap-4 py-4 ${completed ? "opacity-60" : ""}`}>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <p className={`font-medium truncate ${completed ? "text-ink-muted" : "text-ink"}`}>{plan.name}</p>
+          {completed && (
+            <span className="inline-flex items-center gap-1 shrink-0 text-[10px] font-mono font-semibold uppercase tracking-wide text-accent">
+              <CheckCircle2 size={12} aria-hidden="true" />
+              {t("Payment completed")}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <span
+            className="inline-block text-[10px] font-mono font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+            style={{
+              backgroundColor: completed ? "var(--surface-sunken)" : style.bg,
+              color: completed ? "var(--ink-faint)" : style.text,
+            }}
+          >
+            {t(plan.category)}
+          </span>
+          <span className="text-[10px] font-mono text-ink-faint tabular-nums">
+            {upcoming ? t("Starts:") : t("Started:")} {formatDate(plan.startDate, locale)}
+          </span>
+          {(completed || !upcoming) && (
+            <span className="text-[10px] font-mono text-ink-faint tabular-nums">
+              {completed
+                ? `${t("Last installment:")} ${formatDate(lastSlot.isoDate, locale)}`
+                : `${t("Next:")} ${formatDate(nextSlot!.isoDate, locale)}`}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 mt-2.5 max-w-sm">
+          <div
+            className="flex-1 h-1 rounded-full bg-surface-sunken overflow-hidden"
+            role="progressbar"
+            aria-valuenow={plan.generatedCount}
+            aria-valuemin={0}
+            aria-valuemax={plan.totalInstallments}
+            aria-label={`${plan.name}: ${plan.generatedCount}/${plan.totalInstallments}`}
+          >
+            <div className="h-full rounded-full bg-accent" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="text-[10px] font-mono text-ink-muted tabular-nums shrink-0">
+            {t("Installment")} {plan.generatedCount}/{plan.totalInstallments}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <span className={`font-mono font-semibold tabular-nums text-sm mr-1 ${completed ? "text-ink-faint" : "text-ink"}`}>
+          {formatCurrency(plan.amount)}
+          <span className="text-xs text-ink-faint font-normal ml-0.5">{t("/installment")}</span>
+        </span>
+        <button
+          onClick={() => onDelete(plan.id)}
+          aria-label={`${t("Delete")} ${plan.name}`}
+          title={t("Delete")}
+          className="w-9 h-9 flex items-center justify-center rounded-lg text-ink-faint hover:text-negative hover:bg-negative/10 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-negative"
+        >
+          <Trash2 size={14} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SectionHeader({ label, count, t }: { label: string; count: number; t: (key: string) => string }) {
   return (
     <div className="flex items-center justify-between mb-1 px-0.5">
@@ -1041,16 +1242,17 @@ export default function ExpensesPage() {
   // /recurring route's redirect target) opens directly on the Recurring tab
   // instead of just scrolling to it, since the two sections are no longer
   // stacked on one scrollable page.
-  const [activeTab, setActiveTab] = useState<"one-time" | "recurring">("one-time");
+  type ExpenseTab = "one-time" | "recurring" | "installments";
+  const [activeTab, setActiveTab] = useState<ExpenseTab>("one-time");
   useEffect(() => {
-    if (window.location.hash === "#recurring") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveTab("recurring");
-    }
+    const hash = window.location.hash;
+    const fromHash: ExpenseTab | null =
+      hash === "#recurring" ? "recurring" : hash === "#installments" ? "installments" : null;
+    if (fromHash) setActiveTab(fromHash);
   }, []);
-  function selectTab(tab: "one-time" | "recurring") {
+  function selectTab(tab: ExpenseTab) {
     setActiveTab(tab);
-    const hash = tab === "recurring" ? "#recurring" : "";
+    const hash = tab === "recurring" ? "#recurring" : tab === "installments" ? "#installments" : "";
     window.history.replaceState(null, "", window.location.pathname + window.location.search + hash);
   }
 
@@ -1077,6 +1279,13 @@ export default function ExpensesPage() {
   const [confirmRecId, setConfirmRecId] = useState<string | null>(null);
   const [concludeCandidate, setConcludeCandidate] = useState<RecurringExpense | null>(null);
   const [recActionError, setRecActionError] = useState("");
+
+  // ─── Installment plans state ─────────────────────────────────────────────
+  const [plans, setPlans] = useState<InstallmentPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [planRefresh, setPlanRefresh] = useState(0);
+  const [confirmPlanId, setConfirmPlanId] = useState<string | null>(null);
+  const [planActionError, setPlanActionError] = useState("");
 
   // Month's one-time expenses
   useEffect(() => {
@@ -1124,6 +1333,27 @@ export default function ExpensesPage() {
     return () => { cancelled = true; };
   }, [recRefresh]);
 
+  // Installment plans. Loading them also records any installment that has come
+  // due server-side, so the one-time list is reloaded after a plan change too
+  // (see handleAddSaved / handleDeletePlan).
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await getInstallmentPlans();
+        data.sort((a, b) => a.name.localeCompare(b.name));
+        if (!cancelled) setPlans(data);
+      } catch {
+        if (!cancelled) setPlanActionError(t("An error occurred. Please try again."));
+      } finally {
+        if (!cancelled) setPlansLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planRefresh]);
+
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   const animatedTotal = useCountUp(total, reduceMotion);
 
@@ -1154,9 +1384,25 @@ export default function ExpensesPage() {
     setEditing(undefined);
   }
 
-  function handleAddSaved(kind: "one-time" | "recurring") {
+  function handleAddSaved(kind: ExpenseKind) {
     if (kind === "recurring") setRecRefresh((r) => r + 1);
-    else setRefresh((r) => r + 1);
+    else if (kind === "installments") {
+      // The first installment is recorded as an expense right away, so both lists change.
+      setPlanRefresh((r) => r + 1);
+      setRefresh((r) => r + 1);
+    } else setRefresh((r) => r + 1);
+  }
+
+  // ─── Installment handlers ─────────────────────────────────────────────
+  async function handleDeletePlan(id: string) {
+    try {
+      await deleteInstallmentPlan(id);
+      setConfirmPlanId(null);
+      setPlanRefresh((r) => r + 1);
+    } catch (err) {
+      setConfirmPlanId(null);
+      setPlanActionError(err instanceof Error ? err.message : t("An error occurred. Please try again."));
+    }
   }
 
   // ─── Recurring handlers ───────────────────────────────────────────────
@@ -1221,6 +1467,22 @@ export default function ExpensesPage() {
   );
   const totalActive = activeExpenses.reduce((sum, e) => sum + e.amount, 0);
 
+  // ─── Installment partition ────────────────────────────────────────────
+  // "Completed" = every installment recorded; "upcoming" = the first one's month
+  // hasn't begun yet; everything else is in progress.
+  const completedPlans = plans.filter((p) => p.generatedCount >= p.totalInstallments);
+  const upcomingPlans = plans.filter(
+    (p) => p.generatedCount < p.totalInstallments && dueInstallmentCount(p.startDate, p.totalInstallments, currentKey) === 0
+  );
+  const inProgressPlans = plans.filter(
+    (p) => p.generatedCount < p.totalInstallments && dueInstallmentCount(p.startDate, p.totalInstallments, currentKey) > 0
+  );
+  const monthlyInstallments = inProgressPlans.reduce((sum, p) => sum + p.amount, 0);
+  const remainingToPay = [...inProgressPlans, ...upcomingPlans].reduce(
+    (sum, p) => sum + p.amount * (p.totalInstallments - p.generatedCount),
+    0
+  );
+
   const recRowProps = {
     locale,
     onEdit: openEditRecurring,
@@ -1246,7 +1508,11 @@ export default function ExpensesPage() {
           <div>
             <h1 id="expenses-heading" className="text-2xl font-bold text-ink tracking-tight">{t("Expenses")}</h1>
             <p className="text-sm text-ink-muted mt-0.5">
-              {activeTab === "recurring" ? t("Bills, subscriptions, and fixed costs") : t("One-time and variable spending")}
+              {activeTab === "recurring"
+                ? t("Bills, subscriptions, and fixed costs")
+                : activeTab === "installments"
+                  ? t("Fixed-term payments split into monthly installments")
+                  : t("One-time and variable spending")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1276,7 +1542,7 @@ export default function ExpensesPage() {
         {/* Tab switcher — same pill-tab visual language as the Category/    */}
         {/* Date/Amount view-mode toggle below, reused here for consistency. */}
         <div
-          className="flex bg-surface border border-hairline rounded-lg p-1 w-fit mb-8"
+          className="flex bg-surface border border-hairline rounded-lg p-1 w-full sm:w-fit mb-8"
           role="tablist"
           aria-label={t("Expenses")}
         >
@@ -1288,11 +1554,12 @@ export default function ExpensesPage() {
             aria-controls="tabpanel-one-time"
             tabIndex={activeTab === "one-time" ? 0 : -1}
             onClick={() => selectTab("one-time")}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === "one-time" ? "bg-surface-sunken text-ink" : "text-ink-muted hover:text-ink"
             }`}
           >
-            {t("One-time Expenses")}
+            <span className="sm:hidden">{t("One-time")}</span>
+            <span className="hidden sm:inline">{t("One-time Expenses")}</span>
           </button>
           <button
             type="button"
@@ -1302,16 +1569,33 @@ export default function ExpensesPage() {
             aria-controls="tabpanel-recurring"
             tabIndex={activeTab === "recurring" ? 0 : -1}
             onClick={() => selectTab("recurring")}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === "recurring" ? "bg-surface-sunken text-ink" : "text-ink-muted hover:text-ink"
             }`}
           >
-            {t("Recurring Expenses")}
+            <span className="sm:hidden">{t("Recurring")}</span>
+            <span className="hidden sm:inline">{t("Recurring Expenses")}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-installments"
+            aria-selected={activeTab === "installments"}
+            aria-controls="tabpanel-installments"
+            tabIndex={activeTab === "installments" ? 0 : -1}
+            onClick={() => selectTab("installments")}
+            className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === "installments" ? "bg-surface-sunken text-ink" : "text-ink-muted hover:text-ink"
+            }`}
+          >
+            <span className="sm:hidden">{t("Installments")}</span>
+            <span className="hidden sm:inline">{t("Installment Payments")}</span>
           </button>
         </div>
 
         {actionError && activeTab === "one-time" && <ErrorBanner message={actionError} />}
         {recActionError && activeTab === "recurring" && <ErrorBanner message={recActionError} />}
+        {planActionError && activeTab === "installments" && <ErrorBanner message={planActionError} />}
 
       {activeTab === "one-time" && (
         <div id="tabpanel-one-time" role="tabpanel" aria-labelledby="tab-one-time">
@@ -1553,10 +1837,91 @@ export default function ExpensesPage() {
         </div>
         </div>
       )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* INSTALLMENT PAYMENTS tab panel                                  */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {activeTab === "installments" && (
+        <div id="tabpanel-installments" role="tabpanel" aria-labelledby="tab-installments">
+        <div className="w-full max-w-6xl mx-auto">
+          {plansLoading ? (
+            <RecurringSkeleton />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-hairline border border-hairline rounded-lg overflow-hidden mb-8">
+                <div className="bg-surface px-5 py-4">
+                  <p className="text-xs font-mono uppercase tracking-widest text-ink-faint mb-1">{t("Monthly installments in progress")}</p>
+                  <p className="font-mono tabular-nums text-3xl font-bold text-negative tracking-tight">
+                    {formatCurrency(monthlyInstallments)}
+                  </p>
+                  <p className="text-xs text-ink-muted mt-1">
+                    {inProgressPlans.length} {t(inProgressPlans.length === 1 ? "plan in progress" : "plans in progress")}
+                  </p>
+                </div>
+                <div className="bg-surface px-5 py-4">
+                  <p className="text-xs font-mono uppercase tracking-widest text-ink-faint mb-1">{t("Remaining to pay")}</p>
+                  <p className="font-mono tabular-nums text-3xl font-bold text-ink tracking-tight">
+                    {formatCurrency(remainingToPay)}
+                  </p>
+                </div>
+              </div>
+
+              {plans.length === 0 && (
+                <div className="text-center py-16">
+                  <CalendarClock size={40} className="mx-auto mb-3 text-ink-faint" aria-hidden="true" />
+                  <p className="font-semibold text-ink-muted">{t("No installment payments yet")}</p>
+                  <p className="text-sm text-ink-faint mt-1">{t("Split a purchase or loan into a fixed number of monthly payments")}</p>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="mt-4 flex items-center gap-2 mx-auto px-4 py-2.5 rounded-lg text-sm font-bold bg-accent hover:brightness-110 active:scale-[0.98] text-accent-contrast transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    {t("Add First Expense")}
+                  </button>
+                </div>
+              )}
+
+              {inProgressPlans.length > 0 && (
+                <section className="mb-8">
+                  <SectionHeader label={t("In progress")} count={inProgressPlans.length} t={t} />
+                  <div className="border-t border-hairline divide-y divide-hairline">
+                    {inProgressPlans.map((p) => (
+                      <InstallmentRow key={p.id} plan={p} locale={locale} onDelete={setConfirmPlanId} t={t} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {upcomingPlans.length > 0 && (
+                <section className="mb-8">
+                  <SectionHeader label={t("Upcoming")} count={upcomingPlans.length} t={t} />
+                  <div className="border-t border-hairline divide-y divide-hairline">
+                    {upcomingPlans.map((p) => (
+                      <InstallmentRow key={p.id} plan={p} locale={locale} upcoming onDelete={setConfirmPlanId} t={t} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {completedPlans.length > 0 && (
+                <section className="mb-8">
+                  <SectionHeader label={t("Completed")} count={completedPlans.length} t={t} />
+                  <div className="border-t border-hairline divide-y divide-hairline">
+                    {completedPlans.map((p) => (
+                      <InstallmentRow key={p.id} plan={p} locale={locale} onDelete={setConfirmPlanId} t={t} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+        </div>
+        </div>
+      )}
       </section>
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* Confirm dialogs                                                 */}
+      {/* Confirm dialogs                                                */}
       {/* ══════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {confirmId && (
@@ -1564,6 +1929,17 @@ export default function ExpensesPage() {
             message={t("This expense will be permanently deleted. This action cannot be undone.")}
             onConfirm={() => handleDelete(confirmId)}
             onCancel={() => setConfirmId(null)}
+            reduceMotion={reduceMotion}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {confirmPlanId && (
+          <ConfirmDialog
+            message={t("This installment plan will be deleted. Installments already recorded stay in your expenses; the remaining ones will no longer be recorded.")}
+            onConfirm={() => handleDeletePlan(confirmPlanId)}
+            onCancel={() => setConfirmPlanId(null)}
             reduceMotion={reduceMotion}
           />
         )}

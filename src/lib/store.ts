@@ -279,6 +279,57 @@ export async function getTotalOneTimeForMonth(monthKey: MonthKey): Promise<numbe
   return items.reduce((sum, e) => sum + e.amount, 0);
 }
 
+// ─── Installment payments ─────────────────────────────────────────────────────
+// A plan of N fixed monthly installments. The installments themselves are
+// recorded server-side as regular one-time expenses when their month begins
+// (see getOneTimeExpenses*), so this only manages the plans.
+
+export interface InstallmentPlan {
+  id: string;
+  name: string;
+  /** Amount of a single installment. */
+  amount: number;
+  category: string;
+  /** "YYYY-MM-DD" — due date of installment nr. 1; later ones keep its day of month. */
+  startDate: string;
+  totalInstallments: number;
+  /** How many installments have been recorded as expenses so far. */
+  generatedCount: number;
+  createdAt: Date;
+}
+
+function toInstallmentPlan(d: any): InstallmentPlan {
+  return {
+    ...d,
+    amount: Number(d.amount),
+    createdAt: new Date(d.createdAt),
+  };
+}
+
+export async function getInstallmentPlans(): Promise<InstallmentPlan[]> {
+  const data = await fetchJson<any[]>(`${API_BASE}/installments`);
+  return data.map(toInstallmentPlan);
+}
+
+export async function addInstallmentPlan(
+  name: string,
+  amount: number,
+  category: string,
+  startDate: string,
+  totalInstallments: number
+): Promise<InstallmentPlan> {
+  const res = await mutate(`${API_BASE}/installments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, amount, category, startDate, totalInstallments }),
+  });
+  return toInstallmentPlan(await res.json());
+}
+
+export async function deleteInstallmentPlan(id: string): Promise<void> {
+  await mutate(`${API_BASE}/installments/${id}`, { method: "DELETE" });
+}
+
 // ─── Savings Goals & Contributions (network-backed) ───────────────────────────
 
 export const GOAL_COLORS = [

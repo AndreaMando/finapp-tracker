@@ -3,10 +3,19 @@ import { db } from "@/db";
 import { oneTimeExpenses } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { materializeInstallments } from "@/lib/installments-server";
 
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Record any installment whose month has begun before reading. Failing here
+  // must never break the expense list itself.
+  try {
+    await materializeInstallments(session.user.id);
+  } catch (error) {
+    console.error("Installment materialisation failed:", error);
+  }
 
   const url = new URL(req.url);
   const monthKey = url.searchParams.get("monthKey");

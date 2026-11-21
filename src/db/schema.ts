@@ -4,6 +4,7 @@ import {
   timestamp,
   numeric,
   boolean,
+  date,
   primaryKey,
   integer,
 } from "drizzle-orm/pg-core";
@@ -149,6 +150,25 @@ export const oneTimeExpenses = pgTable("one_time_expenses", {
   category: text("category").notNull(),
   date: timestamp("date").notNull(),
   sourceRecurringId: text("source_recurring_id"),
+  sourceInstallmentId: text("source_installment_id"),
+  installmentNumber: integer("installment_number"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+});
+
+// A fixed-term payment split into `totalInstallments` monthly installments.
+// Installments become one-time expenses lazily, when their month begins (see
+// src/lib/installments-server.ts); `generatedCount` is how many exist so far.
+export const installmentPlans = pgTable("installment_plans", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  category: text("category").notNull(),
+  startDate: date("start_date", { mode: "string" }).notNull(),
+  totalInstallments: integer("total_installments").notNull(),
+  generatedCount: integer("generated_count").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: text("user_id")
     .notNull()
