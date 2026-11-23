@@ -169,10 +169,36 @@ export const installmentPlans = pgTable("installment_plans", {
   startDate: date("start_date", { mode: "string" }).notNull(),
   totalInstallments: integer("total_installments").notNull(),
   generatedCount: integer("generated_count").notNull().default(0),
+  // 'installment' (default) or 'mortgage' — a mortgage is the same monthly plan
+  // plus an optional borrowed capital used to estimate rate and interest split.
+  kind: text("kind").notNull().default("installment"),
+  financedAmount: numeric("financed_amount", { precision: 12, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+});
+
+// Changes to a plan's terms after creation — see drizzle/0006. A 'revision' is a
+// recalculated payment / changed duration from installment `fromInstallment` on;
+// an 'extra' is an early repayment, after which the plan continues with the
+// new payment / total. Installments before `fromInstallment` keep their terms.
+export const installmentPlanRevisions = pgTable("installment_plan_revisions", {
+  id: text("id").primaryKey(),
+  planId: text("plan_id")
+    .notNull()
+    .references(() => installmentPlans.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull().default("revision"),
+  fromInstallment: integer("from_installment").notNull(),
+  payment: numeric("payment", { precision: 12, scale: 2 }).notNull(),
+  totalInstallments: integer("total_installments").notNull(),
+  extraAmount: numeric("extra_amount", { precision: 12, scale: 2 }),
+  extraDate: date("extra_date", { mode: "string" }),
+  expenseId: text("expense_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const oneTimeExpensesRelations = relations(oneTimeExpenses, ({ one }) => ({

@@ -1,5 +1,7 @@
 "use client";
 
+import type { PlanRevision } from "@/lib/installment-math";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type MonthKey = string; // "YYYY-MM"
@@ -30,6 +32,10 @@ export interface OneTimeExpense {
   amount: number;
   category: string;
   date: Date;
+  /** Set when the expense was recorded by an installment plan / mortgage. */
+  sourceInstallmentId?: string | null;
+  /** Installment number, or null/undefined for an extra (early) repayment of a mortgage. */
+  installmentNumber?: number | null;
   createdAt: Date;
 }
 
@@ -295,13 +301,22 @@ export interface InstallmentPlan {
   totalInstallments: number;
   /** How many installments have been recorded as expenses so far. */
   generatedCount: number;
+  /** "installment" for a regular plan, "mortgage" for a mortgage (same monthly mechanism). */
+  kind: "installment" | "mortgage";
+  /** Borrowed capital — only for mortgages, and optional. */
+  financedAmount: number | null;
+  /** Later changes: recalculated payments and early repayments (mortgages). */
+  revisions: PlanRevision[];
   createdAt: Date;
 }
 
 function toInstallmentPlan(d: any): InstallmentPlan {
   return {
     ...d,
+    revisions: Array.isArray(d.revisions) ? d.revisions : [],
     amount: Number(d.amount),
+    kind: d.kind === "mortgage" ? "mortgage" : "installment",
+    financedAmount: d.financedAmount === null || d.financedAmount === undefined ? null : Number(d.financedAmount),
     createdAt: new Date(d.createdAt),
   };
 }
@@ -316,18 +331,58 @@ export async function addInstallmentPlan(
   amount: number,
   category: string,
   startDate: string,
-  totalInstallments: number
+  totalInstallments: number,
+  options?: { kind?: "installment" | "mortgage"; financedAmount?: number | null }
 ): Promise<InstallmentPlan> {
   const res = await mutate(`${API_BASE}/installments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, amount, category, startDate, totalInstallments }),
+    body: JSON.stringify({
+      name, amount, category, startDate, totalInstallments,
+      kind: options?.kind,
+      financedAmount: options?.financedAmount,
+    }),
   });
   return toInstallmentPlan(await res.json());
 }
 
 export async function deleteInstallmentPlan(id: string): Promise<void> {
   await mutate(`${API_BASE}/installments/${id}`, { method: "DELETE" });
+}
+
+/** Edit a plan: rename, set/clear the borrowed capital, or revise payment / duration from an installment on. */
+export async function updateInstallmentPlan(
+  id: string,
+  changes: {
+    name?: string;
+    financedAmount?: number | null;
+    startDate?: string;
+    revision?: { payment: number; totalInstallments: number; fromInstallment: number };
+  }
+): Promise<InstallmentPlan> {
+  const res = await mutate(`${API_BASE}/installments/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  return toInstallmentPlan(await res.json());
+}
+
+/** Record an early repayment ("anticipo") and the plan's terms afterwards. */
+export async function addMortgageExtraPayment(
+  id: string,
+  extra: { amount: number; date: string; payment: number; totalInstallments: number }
+): Promise<InstallmentPlan> {
+  const res = await mutate(`${API_BASE}/installments/${id}/extra`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(extra),
+  });
+  return toInstallmentPlan(await res.json());
+}
+
+export async function deletePlanRevision(planId: string, revisionId: string): Promise<void> {
+  await mutate(`${API_BASE}/installments/${planId}/revisions/${revisionId}`, { method: "DELETE" });
 }
 
 // ─── Savings Goals & Contributions (network-backed) ───────────────────────────

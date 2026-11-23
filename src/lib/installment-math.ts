@@ -56,3 +56,67 @@ export function dueInstallmentCount(startIso: string, total: number, nowMonthKey
   const elapsed = (ny * 12 + (nm - 1)) - (p.y * 12 + (p.m - 1)) + 1;
   return Math.max(0, Math.min(total, elapsed));
 }
+
+// ─── Revisions ────────────────────────────────────────────────────────────────
+// A plan starts with a base payment / installment count and can later be
+// revised (payment recalculated, duration changed, early repayment). Each
+// revision holds the terms that apply FROM a given installment number on.
+
+export interface PlanRevision {
+  id: string;
+  kind: "revision" | "extra";
+  /** First installment (1-based) the new terms apply to. */
+  fromInstallment: number;
+  payment: number;
+  /** Total number of installments of the plan from this revision on. */
+  totalInstallments: number;
+  extraAmount: number | null;
+  extraDate: string | null;
+  createdAt: string;
+}
+
+export interface PlanTerms {
+  payment: number;
+  total: number;
+}
+
+type RevisionLike = Pick<PlanRevision, "fromInstallment" | "payment" | "totalInstallments"> & { createdAt?: string | Date };
+
+export function sortRevisions<T extends RevisionLike>(revisions: T[]): T[] {
+  const time = (r: RevisionLike) => (r.createdAt ? new Date(r.createdAt).getTime() : 0);
+  return [...revisions].sort((a, b) => a.fromInstallment - b.fromInstallment || time(a) - time(b));
+}
+
+/** Terms in force for installment `n`. */
+export function termsAt(base: PlanTerms, revisions: RevisionLike[], n: number): PlanTerms {
+  let terms = base;
+  for (const r of sortRevisions(revisions)) {
+    if (r.fromInstallment <= n) terms = { payment: r.payment, total: r.totalInstallments };
+  }
+  return terms;
+}
+
+/** Terms after every revision — what the plan looks like now. */
+export function currentTerms(base: PlanTerms, revisions: RevisionLike[]): PlanTerms {
+  const sorted = sortRevisions(revisions);
+  const last = sorted[sorted.length - 1];
+  return last ? { payment: last.payment, total: last.totalInstallments } : base;
+}
+
+/** How many installments fall due on or before `dateIso` (their own day, not the month start). */
+export function installmentsPaidBy(startIso: string, total: number, dateIso: string): number {
+  let count = 0;
+  for (let n = 1; n <= total; n++) {
+    if (installmentSlot(startIso, n).isoDate <= dateIso) count = n;
+    else break;
+  }
+  return count;
+}
+
+/** Installment number (1-based) whose month is `monthKey` — may be < 1 or > total. */
+export function installmentIndexForMonth(startIso: string, monthKey: string): number {
+  const p = parseIsoDate(startIso);
+  if (!p) return 1;
+  const [y, m] = monthKey.split("-").map(Number);
+  return (y * 12 + (m - 1)) - (p.y * 12 + (p.m - 1)) + 1;
+}

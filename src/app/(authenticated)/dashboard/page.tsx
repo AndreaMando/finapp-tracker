@@ -9,10 +9,15 @@ import {
   formatMonthKey,
   getMonthlySummary,
   getSavingsGoals,
+  getInstallmentPlans,
   previewRecurringForMonth,
   type MonthlySummary,
   type SavingsGoal,
+  type InstallmentPlan,
 } from "@/lib/store";
+import { installmentSlot } from "@/lib/installment-math";
+import { summarizeMortgage, debtCurve } from "@/lib/mortgage-math";
+import { MortgageDebtChart } from "@/components/MortgageDebtChart";
 import RecurringApplyPanel from "@/components/RecurringApplyPanel";
 import { useTranslation } from "@/lib/i18n";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -434,6 +439,84 @@ function GoalCard({ goal, reduceMotion, t }: { goal: SavingsGoal; reduceMotion: 
 }
 
 // ─────────────────────────────────────────────
+// Mortgage card — progress + debt-over-time curve for one mortgage, so the
+// long-term picture sits on the homepage. The detail (figures, amortization
+// schedule) lives on /mortgage.
+// ─────────────────────────────────────────────
+function MortgageCard({
+  plan,
+  locale,
+  t,
+}: {
+  plan: InstallmentPlan;
+  locale: string;
+  t: (k: string) => string;
+}) {
+  const input = useMemo(
+    () => ({
+      payment: plan.amount,
+      count: plan.totalInstallments,
+      capital: plan.financedAmount,
+      revisions: plan.revisions,
+    }),
+    [plan.amount, plan.totalInstallments, plan.financedAmount, plan.revisions]
+  );
+  const curve = useMemo(() => debtCurve(input), [input]);
+  // The plan as it stands now: a recalculation or prepayment can change its length.
+  const count = Math.max(1, curve.length - 1);
+  const paid = Math.min(plan.generatedCount, count);
+  const summary = useMemo(() => summarizeMortgage({ ...input, paid }), [input, paid]);
+  const first = installmentSlot(plan.startDate, 1);
+  const last = installmentSlot(plan.startDate, count);
+  const remaining = plan.financedAmount !== null ? summary.capitalRemaining ?? 0 : summary.remainingToPay;
+
+  return (
+    <div className="rounded-lg border border-hairline bg-surface-sunken p-5">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-ink truncate">{plan.name}</p>
+          <p className="text-xs text-ink-muted font-mono tabular-nums mt-0.5">
+            {paid >= count ? t("Payment completed") : `${t("Installment")} ${paid}/${count}`}
+            {" · "}
+            {t("Expected end")} {formatMonthKey(last.monthKey, locale)}
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-[10px] font-mono font-semibold uppercase tracking-widest text-ink-faint">
+            {plan.financedAmount !== null ? t("Capital remaining") : t("Remaining to pay")}
+          </p>
+          <p className="text-lg font-mono font-bold tabular-nums text-ink">{formatCurrency(remaining)}</p>
+        </div>
+      </div>
+
+      <div
+        className="h-1.5 rounded-full bg-surface overflow-hidden mb-1.5"
+        role="progressbar"
+        aria-valuenow={Math.round(summary.progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${plan.name}: ${Math.round(summary.progress * 100)}%`}
+      >
+        <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, summary.progress * 100)}%` }} />
+      </div>
+      <p className="text-xs font-mono tabular-nums text-accent font-semibold mb-5">{(summary.progress * 100).toFixed(1)}%</p>
+
+      <MortgageDebtChart
+        points={curve}
+        paid={paid}
+        startLabel={formatMonthKey(first.monthKey, locale)}
+        endLabel={formatMonthKey(last.monthKey, locale)}
+        maxLabel={formatCurrency(curve[0]?.debt ?? 0)}
+        ariaLabel={`${t("Debt over time")}: ${plan.name}`}
+        legendPaid={t("Already paid")}
+        legendProjected={t("Projected")}
+        className="h-32 sm:h-40"
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // Section heading — shared "ledger column" microlabel treatment.
 // ─────────────────────────────────────────────
 function SectionHeading({ id, children }: { id?: string; children: React.ReactNode }) {
@@ -454,6 +537,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [recurringPending, setRecurringPending] = useState(0);
+  const [mortgages, setMortgages] = useState<InstallmentPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const reduceMotion = useReducedMotion() ?? false;
 
@@ -461,14 +545,17 @@ export default function DashboardPage() {
     let cancelled = false;
 
     async function load() {
-      const [s, g, recurringItems] = await Promise.all([
+      const [s, g, recurringItems, plans] = await Promise.all([
         getMonthlySummary(monthKey),
         getSavingsGoals(),
         previewRecurringForMonth(monthKey),
+        // A failure here must never take the whole dashboard down.
+        getInstallmentPlans().catch(() => [] as InstallmentPlan[]),
       ]);
       if (!cancelled) {
         setSummary(s);
         setGoals(g);
+        setMortgages(plans.filter((p) => p.kind === "mortgage"));
         setRecurringPending(
           recurringItems.filter((i) => !i.isApplied).reduce((sum, i) => sum + i.amount, 0)
         );
@@ -646,6 +733,31 @@ export default function DashboardPage() {
                 </div>
               </section>
             )}
+
+            {/* Mortgage — always present: the card when there is one, a quiet
+                invitation to add it otherwise (this is the only way into /mortgage). */}
+            <section className="p-6 lg:p-8" aria-labelledby="mortgage-heading">
+              <div className="flex items-center justify-between mb-4">
+                <SectionHeading id="mortgage-heading">{t("Mortgage")}</SectionHeading>
+                <Link
+                  href="/mortgage"
+                  className="text-xs text-accent hover:opacity-80 flex items-center gap-1 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+                >
+                  {mortgages.length > 0 ? t("View details") : t("Add Mortgage")} <ArrowRight size={13} aria-hidden="true" />
+                </Link>
+              </div>
+              {mortgages.length > 0 ? (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {mortgages.map((m) => (
+                    <MortgageCard key={m.id} plan={m} locale={locale} t={t} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-ink-muted">
+                  {t("Add your mortgage to follow what you have repaid and what is left over time")}
+                </p>
+              )}
+            </section>
           </>
         ) : null}
       </div>

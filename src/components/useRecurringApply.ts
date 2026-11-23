@@ -12,21 +12,9 @@ export interface RecurringItem {
   isApplied: boolean;
 }
 
-export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Housing:       { bg: "#60a5fa20", text: "#60a5fa" },
-  Utilities:     { bg: "#fbbf2420", text: "#fbbf24" },
-  Insurance:     { bg: "#a78bfa20", text: "#a78bfa" },
-  Subscriptions: { bg: "#f472b620", text: "#f472b6" },
-  Transport:     { bg: "#fb923c20", text: "#fb923c" },
-  Health:        { bg: "#4ade8020", text: "#4ade80" },
-  Financing:     { bg: "#a3e63520", text: "#a3e635" },
-  Mortgage:      { bg: "#818cf820", text: "#818cf8" },
-  Other:         { bg: "#9ca3af20", text: "#9ca3af" },
-};
-
-export function getCategoryStyle(cat: string) {
-  return CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.Other;
-}
+// Category tag colors now come from the single shared list in src/lib/categories.ts
+// so a category looks the same in the expense lists and in the apply panel.
+export { getCategoryStyle } from "@/lib/categories";
 
 export function useRecurringApply(monthKey: string, onApplied?: () => void) {
   const [items, setItems]       = useState<RecurringItem[]>([]);

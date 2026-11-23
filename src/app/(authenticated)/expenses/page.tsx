@@ -38,6 +38,8 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import RecurringApplyModal from "@/components/RecurringApplyModal";
 import { useTranslation } from "@/lib/i18n";
 import { useCountUp } from "@/hooks/useCountUp";
+import { CATEGORIES, DEFAULT_CATEGORY, getCategoryStyle } from "@/lib/categories";
+import { displayExpenseName } from "@/lib/expense-display";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // This page is the merged Expenses + Recurring Expenses surface: the Expenses
@@ -50,59 +52,8 @@ import { useCountUp } from "@/hooks/useCountUp";
 // ─────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────
-const ONE_TIME_CATEGORIES = [
-  "Food & Dining", "Shopping", "Entertainment", "Travel",
-  "Health", "Personal Care", "Gifts", "Home", "Housing",
-  "Utilities", "Insurance", "Subscriptions", "Transport",
-  "Financing", "Mortgage", "Other",
-];
-
-const RECURRING_CATEGORIES = [
-  "Housing", "Utilities", "Insurance", "Subscriptions",
-  "Transport", "Health", "Financing", "Mortgage", "Other",
-];
-
-// Category tag hues are data-categorization colors (same pattern as the
-// per-goal colors elsewhere in the app), not part of the four core ledger
-// tokens — kept as their own small palettes, one per expense kind, matching
-// what each source page shipped with.
-const ONE_TIME_CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  "Food & Dining":  { bg: "#ef444420", text: "#ef4444" },
-  Shopping:         { bg: "#f9731620", text: "#f97316" },
-  Entertainment:    { bg: "#eab30820", text: "#eab308" },
-  Travel:           { bg: "#22c55e20", text: "#22c55e" },
-  Health:           { bg: "#14b8a620", text: "#14b8a6" },
-  "Personal Care":  { bg: "#3b82f620", text: "#3b82f6" },
-  Gifts:            { bg: "#6366f120", text: "#6366f1" },
-  Home:             { bg: "#a855f720", text: "#a855f7" },
-  Housing:          { bg: "#ec489920", text: "#ec4899" },
-  Utilities:        { bg: "#f43f5e20", text: "#f43f5e" },
-  Insurance:        { bg: "#06b6d420", text: "#06b6d4" },
-  Subscriptions:    { bg: "#84cc1620", text: "#84cc16" },
-  Transport:        { bg: "#0ea5e920", text: "#0ea5e9" },
-  Financing:        { bg: "#f59e0b20", text: "#f59e0b" },
-  Mortgage:         { bg: "#10b98120", text: "#10b981" },
-  Other:            { bg: "#9ca3af20", text: "#9ca3af" },
-};
-
-const RECURRING_CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Housing:          { bg: "#ec489920", text: "#ec4899" },
-  Utilities:        { bg: "#f43f5e20", text: "#f43f5e" },
-  Insurance:        { bg: "#06b6d420", text: "#06b6d4" },
-  Subscriptions:    { bg: "#84cc1620", text: "#84cc16" },
-  Transport:        { bg: "#0ea5e920", text: "#0ea5e9" },
-  Financing:        { bg: "#f59e0b20", text: "#f59e0b" },
-  Mortgage:         { bg: "#10b98120", text: "#10b981" },
-  Health:           { bg: "#f9731620", text: "#f97316" },
-  Other:            { bg: "#9ca3af20", text: "#9ca3af" },
-};
-
-function getOneTimeCategoryStyle(cat: string) {
-  return ONE_TIME_CATEGORY_COLORS[cat] ?? ONE_TIME_CATEGORY_COLORS.Other;
-}
-function getRecurringCategoryStyle(cat: string) {
-  return RECURRING_CATEGORY_COLORS[cat] ?? RECURRING_CATEGORY_COLORS.Other;
-}
+// Categories and their tag colors are shared by one-time, recurring and installment
+// expenses — see src/lib/categories.ts.
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -300,7 +251,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
   const today = new Date().toISOString().split("T")[0];
   const [name, setName] = useState(existing?.name ?? "");
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
-  const [category, setCategory] = useState(existing?.category ?? ONE_TIME_CATEGORIES[0]);
+  const [category, setCategory] = useState(existing?.category ?? DEFAULT_CATEGORY);
   const [date, setDate] = useState(
     existing?.date ? new Date(existing.date).toISOString().split("T")[0] : today
   );
@@ -422,7 +373,7 @@ function ExpenseForm({ existing, onSave, onClose }: ExpenseFormProps) {
           className="block w-full px-4 py-3 text-sm text-ink bg-surface-sunken border border-hairline rounded-lg
                      transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent cursor-pointer appearance-none"
         >
-          {ONE_TIME_CATEGORIES.map((c) => (
+          {CATEGORIES.map((c) => (
             <option key={c} value={c}>{t(c)}</option>
           ))}
         </select>
@@ -468,11 +419,13 @@ function ExpenseRow({
   onDelete: (id: string) => void;
   t: (key: string) => string;
 }) {
-  const style = getOneTimeCategoryStyle(expense.category);
+  const style = getCategoryStyle(expense.category);
+  // Installment / mortgage rows get their "(rata nr. X)" label in the current language.
+  const displayName = displayExpenseName(expense, t);
   return (
     <div className="flex items-center justify-between gap-4 py-3.5">
       <div className="min-w-0 flex-1">
-        <p className="font-medium text-ink truncate">{expense.name}</p>
+        <p className="font-medium text-ink truncate">{displayName}</p>
         {(showDate || showCategoryBadge) && (
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {showDate && (
@@ -498,14 +451,14 @@ function ExpenseRow({
         </span>
         <button
           onClick={() => onEdit(expense)}
-          aria-label={`${t("Edit")} ${expense.name}`}
+          aria-label={`${t("Edit")} ${displayName}`}
           className="w-9 h-9 flex items-center justify-center rounded-lg text-ink-faint hover:text-accent hover:bg-accent/10 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           <Pencil size={14} aria-hidden="true" />
         </button>
         <button
           onClick={() => onDelete(expense.id)}
-          aria-label={`${t("Delete")} ${expense.name}`}
+          aria-label={`${t("Delete")} ${displayName}`}
           className="w-9 h-9 flex items-center justify-center rounded-lg text-ink-faint hover:text-negative hover:bg-negative/10 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-negative"
         >
           <Trash2 size={14} aria-hidden="true" />
@@ -530,7 +483,7 @@ function RecurringExpenseForm({ existing, onSave, onClose }: RecurringFormProps)
   const todayKey = currentMonthKey();
   const [name, setName] = useState(existing?.name ?? "");
   const [amount, setAmount] = useState(existing?.amount.toString() ?? "");
-  const [category, setCategory] = useState(existing?.category ?? RECURRING_CATEGORIES[0]);
+  const [category, setCategory] = useState(existing?.category ?? DEFAULT_CATEGORY);
   const [startMonth, setStartMonth] = useState(existing?.startMonth ?? todayKey);
   const [endMonth] = useState<string>(existing?.endMonth ?? "");
   const DEFAULT_APPLY_PREF_KEY = "recurringApplyFromDefault";
@@ -647,7 +600,7 @@ function RecurringExpenseForm({ existing, onSave, onClose }: RecurringFormProps)
           className="block w-full px-4 py-3 text-sm text-ink bg-surface-sunken border border-hairline rounded-lg
                      transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent cursor-pointer appearance-none"
         >
-          {RECURRING_CATEGORIES.map((c) => (
+          {CATEGORIES.map((c) => (
             <option key={c} value={c}>{t(c)}</option>
           ))}
         </select>
@@ -759,7 +712,7 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [kind, setKind] = useState<ExpenseKind>("one-time");
-  const [category, setCategory] = useState(ONE_TIME_CATEGORIES[0]);
+  const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [date, setDate] = useState(today);
   const [startMonth, setStartMonth] = useState(todayMonthKey);
   const [installments, setInstallments] = useState("");
@@ -772,7 +725,6 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
 
   const isRecurring = kind === "recurring";
   const isInstallments = kind === "installments";
-  const categories = isRecurring ? RECURRING_CATEGORIES : ONE_TIME_CATEGORIES;
 
   const KINDS: Array<{ id: ExpenseKind; label: string }> = [
     { id: "one-time", label: t("One-time") },
@@ -782,8 +734,6 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
 
   function handleKindChange(next: ExpenseKind) {
     setKind(next);
-    const list = next === "recurring" ? RECURRING_CATEGORIES : ONE_TIME_CATEGORIES;
-    if (!list.includes(category)) setCategory(list[0]);
     setErrors((p) => ({ ...p, date: "", startMonth: "", installments: "" }));
   }
 
@@ -917,7 +867,7 @@ function UnifiedAddExpenseForm({ onSave, onClose }: UnifiedAddFormProps) {
           className="block w-full px-4 py-3 text-sm text-ink bg-surface-sunken border border-hairline rounded-lg
                      transition-all focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent cursor-pointer appearance-none"
         >
-          {categories.map((c) => (
+          {CATEGORIES.map((c) => (
             <option key={c} value={c}>{t(c)}</option>
           ))}
         </select>
@@ -1058,7 +1008,7 @@ function RecurringRow({
   onRestore: (e: RecurringExpense) => void;
   t: (key: string) => string;
 }) {
-  const style = getRecurringCategoryStyle(expense.category);
+  const style = getCategoryStyle(expense.category);
 
   return (
     <div className={`flex items-center justify-between gap-4 py-4 ${paused ? "opacity-60" : ""}`}>
@@ -1146,7 +1096,7 @@ function InstallmentRow({
   onDelete: (id: string) => void;
   t: (key: string) => string;
 }) {
-  const style = getOneTimeCategoryStyle(plan.category);
+  const style = getCategoryStyle(plan.category);
   const completed = plan.generatedCount >= plan.totalInstallments;
   const progress = Math.min(100, (plan.generatedCount / plan.totalInstallments) * 100);
   const nextSlot = !completed ? installmentSlot(plan.startDate, plan.generatedCount + 1) : null;
@@ -1340,7 +1290,8 @@ export default function ExpensesPage() {
     let cancelled = false;
     async function load() {
       try {
-        const data = await getInstallmentPlans();
+        // Mortgages share the table but have their own page (/mortgage).
+        const data = (await getInstallmentPlans()).filter((p) => p.kind === "installment");
         data.sort((a, b) => a.name.localeCompare(b.name));
         if (!cancelled) setPlans(data);
       } catch {
@@ -1714,7 +1665,7 @@ export default function ExpensesPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-10 gap-y-8">
                   {groupedEntries.map(([groupKey, items]) => {
                     const catTotal = items.reduce((s, e) => s + e.amount, 0);
-                    const style = getOneTimeCategoryStyle(groupKey);
+                    const style = getCategoryStyle(groupKey);
                     return (
                       <div key={groupKey}>
                         <div className="flex items-center justify-between mb-2 px-0.5">
